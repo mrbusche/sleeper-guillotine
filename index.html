@@ -373,7 +373,7 @@
           if (player) {
             // Use playerId to track, as it's the unique identifier
             optimalStarterIds.add(player.playerId);
-            totalPoints += player.points; // This is the mixed (display) total
+            totalPoints += player.actualPoints > 0 ? player.actualPoints : player.points; // This is the mixed (display) total
             totalActualPoints += player.actualPoints; // This is the pure actual total
             orderedStarters.push(player); // Add the full player object
           }
