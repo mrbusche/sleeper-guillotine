@@ -172,31 +172,57 @@
           setLoading(true, `Fetching projections for Week ${week}...`);
           const weeklyProjections = await fetchData(`${API_BASE}/projections/nfl/regular/${season}/${week}`);
 
-          // 3c. Fetch NFL schedule for the week
+          // 3c. Fetch NFL schedule for the week using ESPN API
           setLoading(true, 'Fetching NFL schedule...');
-          const nflSchedule = await fetchData(`${API_BASE}/scores/nfl/reg/${season}/${week}`);
-
-          // Convert schedule array to a quick-lookup map with opponent information
-          const scheduleMap = nflSchedule.reduce((acc, game) => {
-            // game.status can be: 'pre_game', 'inprogress', 'halftime', 'post_game'
-            if (game.home_team) {
-              acc[game.home_team] = {
-                status: game.status,
-                game_id: game.game_id,
-                opponent: game.away_team,
-                isHome: true,
-              };
+          const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${week}`;
+          const espnScheduleData = await fetchData(espnScheduleUrl);
+          
+          // Convert ESPN schedule data to a quick-lookup map with opponent information
+          const scheduleMap = {};
+          if (espnScheduleData && espnScheduleData.events) {
+            for (const event of espnScheduleData.events) {
+              if (!event.competitions || !event.competitions[0]) continue;
+              
+              const competition = event.competitions[0];
+              const competitors = competition.competitors;
+              
+              // Find home and away teams
+              const homeTeam = competitors.find(c => c.homeAway === 'home');
+              const awayTeam = competitors.find(c => c.homeAway === 'away');
+              
+              if (!homeTeam || !awayTeam) continue;
+              
+              // Get team abbreviations (ESPN uses different abbreviations than Sleeper)
+              const homeAbbr = homeTeam.team?.abbreviation;
+              const awayAbbr = awayTeam.team?.abbreviation;
+              
+              // Determine game status
+              let status = 'pre_game';
+              if (competition.status?.type?.state === 'in') {
+                status = 'inprogress';
+              } else if (competition.status?.type?.state === 'post') {
+                status = 'post_game';
+              }
+              
+              if (homeAbbr) {
+                scheduleMap[homeAbbr] = {
+                  status: status,
+                  game_id: event.id,
+                  opponent: awayAbbr,
+                  isHome: true,
+                };
+              }
+              
+              if (awayAbbr) {
+                scheduleMap[awayAbbr] = {
+                  status: status,
+                  game_id: event.id,
+                  opponent: homeAbbr,
+                  isHome: false,
+                };
+              }
             }
-            if (game.away_team) {
-              acc[game.away_team] = {
-                status: game.status,
-                game_id: game.game_id,
-                opponent: game.home_team,
-                isHome: false,
-              };
-            }
-            return acc;
-          }, {});
+          }
 
           // 4. Process and Render
           setLoading(true, 'Processing and rendering rosters...');
@@ -431,7 +457,7 @@
             (p) => `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
-                        ${p.name} ${p.playerTeam}
+                        ${p.name} ${p.playerTeam ? p.playerTeam + ' ' : ''}${p.opponent ? p.opponent : ''}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
                     </span>
                     <span class="flex-shrink-0 text-right">
