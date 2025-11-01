@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sleeper League Viewer</title>
     <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/css/tailwind.css"></script>
     <style>
       /* Use the Inter font family */
       body {
@@ -34,7 +34,7 @@
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <header class="mb-6">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Sleeper League Viewer</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Sleeper Guillotine League Viewer</h1>
         <p class="text-lg text-gray-600">Enter your league ID and a week to see all rosters and points.</p>
       </header>
 
@@ -176,11 +176,26 @@
           setLoading(true, 'Fetching NFL schedule...');
           const nflSchedule = await fetchData(`${API_BASE}/scores/nfl/reg/${season}/${week}`);
 
-          // Convert schedule array to a quick-lookup map
+          // Convert schedule array to a quick-lookup map with opponent information
+          console.log('NFL Schedule:', nflSchedule); // Debug log
           const scheduleMap = nflSchedule.reduce((acc, game) => {
             // game.status can be: 'pre_game', 'inprogress', 'halftime', 'post_game'
-            if (game.home_team) acc[game.home_team] = { status: game.status, game_id: game.game_id };
-            if (game.away_team) acc[game.away_team] = { status: game.status, game_id: game.game_id };
+            if (game.home_team) {
+              acc[game.home_team] = {
+                status: game.status,
+                game_id: game.game_id,
+                opponent: game.away_team,
+                isHome: true,
+              };
+            }
+            if (game.away_team) {
+              acc[game.away_team] = {
+                status: game.status,
+                game_id: game.game_id,
+                opponent: game.home_team,
+                isHome: false,
+              };
+            }
             return acc;
           }, {});
 
@@ -280,11 +295,16 @@
             }
             // --- END UPDATED POINTS LOGIC ---
 
+            // Get opponent information from schedule
+            const gameInfo = scheduleMap[playerTeam] || { opponent: 'BYE', isHome: false };
+            const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? 'vs ' + gameInfo.opponent : '@ ' + gameInfo.opponent) : 'BYE';
+
             playersInfo.push({
               playerId: playerId, // Add playerId for tracking in optimal calculator
               name: playerName,
               position: position,
               playerTeam: playerTeam,
+              opponent: opponentDisplay,
               points: displayPoints, // This will be used for calculation (mixed total)
               actualPoints: actualPoints, // Store for the "Actual Total"
               projectedPoints: projectedPoints, // Store for reference
@@ -496,5 +516,21 @@
         messageArea.querySelector('.spinner').classList.remove('hidden');
       }
     </script>
+
+    <!-- GitHub Link -->
+    <div class="text-center py-8">
+      <a
+        href="https://github.com/mrbusche/sleeper-guillotine"
+        class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition duration-150 ease-in-out"
+        target="_blank"
+      >
+        Contribute on GitHub
+        <svg class="ml-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+          />
+        </svg>
+      </a>
+    </div>
   </body>
 </html>
