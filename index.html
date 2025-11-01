@@ -177,7 +177,6 @@
           const nflSchedule = await fetchData(`${API_BASE}/scores/nfl/reg/${season}/${week}`);
 
           // Convert schedule array to a quick-lookup map with opponent information
-          console.log('NFL Schedule:', nflSchedule); // Debug log
           const scheduleMap = nflSchedule.reduce((acc, game) => {
             // game.status can be: 'pre_game', 'inprogress', 'halftime', 'post_game'
             if (game.home_team) {
@@ -291,7 +290,6 @@
             } else {
               // Game is 'inprogress', 'post_game', 'halftime', etc. Use actual points.
               displayPoints = actualPoints;
-              isProjected = false;
             }
             // --- END UPDATED POINTS LOGIC ---
 
@@ -324,11 +322,11 @@
 
           // Update the isStarter flag for UI highlighting based on the optimal lineup
           // We still use the Set for a quick lookup
-          playersInfo.forEach((p) => {
+          for (const p of playersInfo) {
             if (optimalStarters.has(p.playerId)) {
               p.isStarter = true;
             }
-          });
+          }
           // --- END NEW CALCULATION ---
 
           // --- NEW SORTING LOGIC ---
