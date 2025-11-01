@@ -105,6 +105,18 @@
       // Cache for all NFL players data. This is a large file and should only be fetched once.
       let allPlayersData = null;
       const API_BASE = 'https://api.sleeper.app/v1';
+      const ESPN_REGULAR_SEASON_TYPE = 2; // ESPN API constant for regular season
+
+      // Team abbreviation mapping: Sleeper -> ESPN
+      // Most teams use the same abbreviations, but Jacksonville differs
+      const TEAM_ABBR_SLEEPER_TO_ESPN = {
+        'JAC': 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
+      };
+
+      // Convert Sleeper team abbreviation to ESPN abbreviation
+      function convertTeamAbbr(sleeperAbbr) {
+        return TEAM_ABBR_SLEEPER_TO_ESPN[sleeperAbbr] || sleeperAbbr;
+      }
 
       // Calculate current NFL week based on date
       function getCurrentNFLWeek() {
@@ -174,7 +186,7 @@
 
           // 3c. Fetch NFL schedule for the week using ESPN API
           setLoading(true, 'Fetching NFL schedule...');
-          const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${week}`;
+          const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${week}`;
           const espnScheduleData = await fetchData(espnScheduleUrl);
           
           // Convert ESPN schedule data to a quick-lookup map with opponent information
@@ -192,7 +204,7 @@
               
               if (!homeTeam || !awayTeam) continue;
               
-              // Get team abbreviations (ESPN uses different abbreviations than Sleeper)
+              // Get team abbreviations from ESPN
               const homeAbbr = homeTeam.team?.abbreviation;
               const awayAbbr = awayTeam.team?.abbreviation;
               
@@ -294,8 +306,9 @@
             const position = playerDetails.position;
 
             // --- UPDATED POINTS LOGIC ---
-            const playerTeam = playerDetails.team; // Use the player's main team to check schedule
-            const gameStatus = playerTeam ? scheduleMap[playerTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
+            const playerTeam = playerDetails.team; // Sleeper team abbreviation
+            const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null; // Convert to ESPN abbreviation
+            const gameStatus = espnTeam ? scheduleMap[espnTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
 
             // Get actual points
             const actualPoints = stats[playerId] && stats[playerId][scoringKey] !== undefined ? stats[playerId][scoringKey] : 0;
@@ -319,8 +332,8 @@
             }
             // --- END UPDATED POINTS LOGIC ---
 
-            // Get opponent information from schedule
-            const gameInfo = scheduleMap[playerTeam] || { opponent: null, isHome: false };
+            // Get opponent information from schedule (using ESPN team abbreviation)
+            const gameInfo = scheduleMap[espnTeam] || { opponent: null, isHome: false };
             const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? 'vs ' + gameInfo.opponent : '@ ' + gameInfo.opponent) : 'BYE';
 
             playersInfo.push({
@@ -454,10 +467,16 @@
 
         let playersHtml = players
           .map(
-            (p) => `
+            (p) => {
+              // Build player info display string
+              const teamDisplay = p.playerTeam ? `${p.playerTeam} ` : '';
+              const opponentDisplay = p.opponent || '';
+              const playerInfo = `${p.name} ${teamDisplay}${opponentDisplay}`;
+              
+              return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
-                        ${p.name} ${p.playerTeam ? p.playerTeam + ' ' : ''}${p.opponent ? p.opponent : ''}
+                        ${playerInfo}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
                     </span>
                     <span class="flex-shrink-0 text-right">
@@ -465,7 +484,8 @@
                         <span class="italic font-normal text-gray-500 ml-1">(${p.projectedPoints.toFixed(2)})</span>
                     </span>
                 </li>
-            `,
+            `;
+            },
           )
           .join('');
 
