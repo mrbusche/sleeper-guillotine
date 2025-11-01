@@ -465,6 +465,18 @@
         const card = document.createElement('div');
         card.className = 'bg-white shadow-lg rounded-lg p-4 overflow-hidden';
 
+        // If totals match (to 2 decimals as displayed), show a single large green check icon to the right of totals
+        const totalsMatch = totalProjected.toFixed(2) === totalActual.toFixed(2);
+        const singleCheckIconHtml = totalsMatch
+          ? `
+            <span class="ml-3 inline-flex items-center text-green-600" title="Projected equals Actual" role="img" aria-label="Projected equals Actual">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 7.22a.75.75 0 00-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 10-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l5.25-5.25z" clip-rule="evenodd" />
+              </svg>
+            </span>
+          `
+          : '';
+
         let playersHtml = players
           .map((p) => {
             // Build player info display string with proper spacing
@@ -492,12 +504,19 @@
                 <div class="border-b border-gray-200 pb-3 mb-3">
                     <h3 class="text-xl font-bold truncate" title="${owner.teamName}">${owner.teamName}</h3>
                     <p class="text-sm text-gray-500">${owner.ownerName}</p>
-                    <p class="text-2xl font-bold text-blue-600 mt-2">${totalProjected.toFixed(
-                      2,
-                    )} <span class="text-base font-normal text-gray-600">Projected Total</span></p>
-                    <p class="text-lg font-semibold text-gray-700 mt-1">${totalActual.toFixed(
-                      2,
-                    )} <span class="text-base font-normal text-gray-600">Actual Total</span></p>
+                    <div class="mt-2 flex items-center justify-between">
+                      <div>
+                        <p class="text-2xl font-bold text-blue-600">
+                          ${totalProjected.toFixed(2)}
+                          <span class="text-base font-normal text-gray-600">Projected Total</span>
+                        </p>
+                        <p class="text-lg font-semibold text-gray-700 mt-1">
+                          ${totalActual.toFixed(2)}
+                          <span class="text-base font-normal text-gray-600">Actual Total</span>
+                        </p>
+                      </div>
+                      ${singleCheckIconHtml}
+                    </div>
                 </div>
                 <ul class="divide-y divide-gray-200">
                     ${playersHtml}
