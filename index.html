@@ -140,7 +140,7 @@
           // This is the largest request and is cached globally
           if (!allPlayersData) {
             setLoading(true, 'Fetching all NFL player data (first-time load, may take a moment)...');
-            allPlayersData = await fetchData('players.json');
+            allPlayersData = await fetchData('players_pruned.json');
           }
 
           // 2. Fetch league-specific data
@@ -270,6 +270,7 @@
               playerId: playerId, // Add playerId for tracking in optimal calculator
               name: playerName,
               position: position,
+              playerTeam: playerTeam,
               points: displayPoints, // This will be used for calculation (mixed total)
               actualPoints: actualPoints, // Store for the "Actual Total"
               projectedPoints: projectedPoints, // Store for reference
@@ -398,7 +399,7 @@
             (p) => `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
-                        ${p.name}
+                        ${p.name} ${p.playerTeam}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
                     </span>
                     <span class="flex-shrink-0 text-right">
