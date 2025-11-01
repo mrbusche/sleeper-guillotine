@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -110,7 +110,7 @@
       // Team abbreviation mapping: Sleeper -> ESPN
       // Most teams use the same abbreviations, but Jacksonville differs
       const TEAM_ABBR_SLEEPER_TO_ESPN = {
-        'JAC': 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
+        JAC: 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
       };
 
       // Convert Sleeper team abbreviation to ESPN abbreviation
@@ -188,26 +188,26 @@
           setLoading(true, 'Fetching NFL schedule...');
           const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${week}`;
           const espnScheduleData = await fetchData(espnScheduleUrl);
-          
+
           // Convert ESPN schedule data to a quick-lookup map with opponent information
           const scheduleMap = {};
           if (espnScheduleData && espnScheduleData.events) {
             for (const event of espnScheduleData.events) {
               if (!event.competitions || !event.competitions[0]) continue;
-              
+
               const competition = event.competitions[0];
               const competitors = competition.competitors;
-              
+
               // Find home and away teams
-              const homeTeam = competitors.find(c => c.homeAway === 'home');
-              const awayTeam = competitors.find(c => c.homeAway === 'away');
-              
+              const homeTeam = competitors.find((c) => c.homeAway === 'home');
+              const awayTeam = competitors.find((c) => c.homeAway === 'away');
+
               if (!homeTeam || !awayTeam) continue;
-              
+
               // Get team abbreviations from ESPN
               const homeAbbr = homeTeam.team?.abbreviation;
               const awayAbbr = awayTeam.team?.abbreviation;
-              
+
               // Determine game status
               let status = 'pre_game';
               if (competition.status?.type?.state === 'in') {
@@ -215,7 +215,7 @@
               } else if (competition.status?.type?.state === 'post') {
                 status = 'post_game';
               }
-              
+
               if (homeAbbr) {
                 scheduleMap[homeAbbr] = {
                   status: status,
@@ -224,7 +224,7 @@
                   isHome: true,
                 };
               }
-              
+
               if (awayAbbr) {
                 scheduleMap[awayAbbr] = {
                   status: status,
@@ -466,15 +466,14 @@
         card.className = 'bg-white shadow-lg rounded-lg p-4 overflow-hidden';
 
         let playersHtml = players
-          .map(
-            (p) => {
-              // Build player info display string with proper spacing
-              const parts = [p.name];
-              if (p.playerTeam) parts.push(p.playerTeam);
-              if (p.opponent) parts.push(p.opponent);
-              const playerInfo = parts.join(' ');
-              
-              return `
+          .map((p) => {
+            // Build player info display string with proper spacing
+            const parts = [p.name];
+            if (p.playerTeam) parts.push(p.playerTeam);
+            if (p.opponent) parts.push(p.opponent);
+            const playerInfo = parts.join(' ');
+
+            return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
                         ${playerInfo}
@@ -486,8 +485,7 @@
                     </span>
                 </li>
             `;
-            },
-          )
+          })
           .join('');
 
         card.innerHTML = `
