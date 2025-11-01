@@ -105,6 +105,18 @@
       // Cache for all NFL players data. This is a large file and should only be fetched once.
       let allPlayersData = null;
       const API_BASE = 'https://api.sleeper.app/v1';
+      const ESPN_REGULAR_SEASON_TYPE = 2; // ESPN API constant for regular season
+
+      // Team abbreviation mapping: Sleeper -> ESPN
+      // Most teams use the same abbreviations, but Jacksonville differs
+      const TEAM_ABBR_SLEEPER_TO_ESPN = {
+        'JAC': 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
+      };
+
+      // Convert Sleeper team abbreviation to ESPN abbreviation
+      function convertTeamAbbr(sleeperAbbr) {
+        return TEAM_ABBR_SLEEPER_TO_ESPN[sleeperAbbr] || sleeperAbbr;
+      }
 
       // Calculate current NFL week based on date
       function getCurrentNFLWeek() {
@@ -172,31 +184,57 @@
           setLoading(true, `Fetching projections for Week ${week}...`);
           const weeklyProjections = await fetchData(`${API_BASE}/projections/nfl/regular/${season}/${week}`);
 
-          // 3c. Fetch NFL schedule for the week
+          // 3c. Fetch NFL schedule for the week using ESPN API
           setLoading(true, 'Fetching NFL schedule...');
-          const nflSchedule = await fetchData(`${API_BASE}/scores/nfl/reg/${season}/${week}`);
-
-          // Convert schedule array to a quick-lookup map with opponent information
-          const scheduleMap = nflSchedule.reduce((acc, game) => {
-            // game.status can be: 'pre_game', 'inprogress', 'halftime', 'post_game'
-            if (game.home_team) {
-              acc[game.home_team] = {
-                status: game.status,
-                game_id: game.game_id,
-                opponent: game.away_team,
-                isHome: true,
-              };
+          const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${week}`;
+          const espnScheduleData = await fetchData(espnScheduleUrl);
+          
+          // Convert ESPN schedule data to a quick-lookup map with opponent information
+          const scheduleMap = {};
+          if (espnScheduleData && espnScheduleData.events) {
+            for (const event of espnScheduleData.events) {
+              if (!event.competitions || !event.competitions[0]) continue;
+              
+              const competition = event.competitions[0];
+              const competitors = competition.competitors;
+              
+              // Find home and away teams
+              const homeTeam = competitors.find(c => c.homeAway === 'home');
+              const awayTeam = competitors.find(c => c.homeAway === 'away');
+              
+              if (!homeTeam || !awayTeam) continue;
+              
+              // Get team abbreviations from ESPN
+              const homeAbbr = homeTeam.team?.abbreviation;
+              const awayAbbr = awayTeam.team?.abbreviation;
+              
+              // Determine game status
+              let status = 'pre_game';
+              if (competition.status?.type?.state === 'in') {
+                status = 'inprogress';
+              } else if (competition.status?.type?.state === 'post') {
+                status = 'post_game';
+              }
+              
+              if (homeAbbr) {
+                scheduleMap[homeAbbr] = {
+                  status: status,
+                  game_id: event.id,
+                  opponent: awayAbbr,
+                  isHome: true,
+                };
+              }
+              
+              if (awayAbbr) {
+                scheduleMap[awayAbbr] = {
+                  status: status,
+                  game_id: event.id,
+                  opponent: homeAbbr,
+                  isHome: false,
+                };
+              }
             }
-            if (game.away_team) {
-              acc[game.away_team] = {
-                status: game.status,
-                game_id: game.game_id,
-                opponent: game.home_team,
-                isHome: false,
-              };
-            }
-            return acc;
-          }, {});
+          }
 
           // 4. Process and Render
           setLoading(true, 'Processing and rendering rosters...');
@@ -268,8 +306,9 @@
             const position = playerDetails.position;
 
             // --- UPDATED POINTS LOGIC ---
-            const playerTeam = playerDetails.team; // Use the player's main team to check schedule
-            const gameStatus = playerTeam ? scheduleMap[playerTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
+            const playerTeam = playerDetails.team; // Sleeper team abbreviation
+            const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null; // Convert to ESPN abbreviation
+            const gameStatus = espnTeam ? scheduleMap[espnTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
 
             // Get actual points
             const actualPoints = stats[playerId] && stats[playerId][scoringKey] !== undefined ? stats[playerId][scoringKey] : 0;
@@ -293,8 +332,8 @@
             }
             // --- END UPDATED POINTS LOGIC ---
 
-            // Get opponent information from schedule
-            const gameInfo = scheduleMap[playerTeam] || { opponent: 'BYE', isHome: false };
+            // Get opponent information from schedule (using ESPN team abbreviation)
+            const gameInfo = scheduleMap[espnTeam] || { opponent: null, isHome: false };
             const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? 'vs ' + gameInfo.opponent : '@ ' + gameInfo.opponent) : 'BYE';
 
             playersInfo.push({
@@ -428,10 +467,17 @@
 
         let playersHtml = players
           .map(
-            (p) => `
+            (p) => {
+              // Build player info display string with proper spacing
+              const parts = [p.name];
+              if (p.playerTeam) parts.push(p.playerTeam);
+              if (p.opponent) parts.push(p.opponent);
+              const playerInfo = parts.join(' ');
+              
+              return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
-                        ${p.name} ${p.playerTeam}
+                        ${playerInfo}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
                     </span>
                     <span class="flex-shrink-0 text-right">
@@ -439,7 +485,8 @@
                         <span class="italic font-normal text-gray-500 ml-1">(${p.projectedPoints.toFixed(2)})</span>
                     </span>
                 </li>
-            `,
+            `;
+            },
           )
           .join('');
 
