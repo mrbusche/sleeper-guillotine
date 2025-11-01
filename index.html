@@ -106,6 +106,17 @@
       let allPlayersData = null;
       const API_BASE = 'https://api.sleeper.app/v1';
 
+      // Calculate current NFL week based on date
+      function getCurrentNFLWeek() {
+        const today = new Date();
+        // Week 1 starts on September 5th, 2025
+        const seasonStart = new Date(2025, 8, 5); // Month is 0-based, so 8 is September
+        const diffTime = Math.abs(today - seasonStart);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const currentWeek = Math.ceil(diffDays / 7);
+        return Math.min(Math.max(currentWeek, 1), 18); // Ensure week is between 1 and 18
+      }
+
       // --- DOM Elements ---
       const leagueIdInput = document.getElementById('leagueId');
       const weekInput = document.getElementById('week');
@@ -119,7 +130,10 @@
       const eliminatedSection = document.getElementById('eliminatedSection');
       const eliminatedList = document.getElementById('eliminatedList');
 
-      // --- Event Listener ---
+      // --- Event Listeners ---
+      document.addEventListener('DOMContentLoaded', () => {
+        weekInput.value = getCurrentNFLWeek();
+      });
       fetchButton.addEventListener('click', handleFetchData);
 
       // --- Main Function ---
