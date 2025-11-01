@@ -468,10 +468,11 @@
         let playersHtml = players
           .map(
             (p) => {
-              // Build player info display string
-              const teamDisplay = p.playerTeam ? `${p.playerTeam} ` : '';
-              const opponentDisplay = p.opponent || '';
-              const playerInfo = `${p.name} ${teamDisplay}${opponentDisplay}`;
+              // Build player info display string with proper spacing
+              const parts = [p.name];
+              if (p.playerTeam) parts.push(p.playerTeam);
+              if (p.opponent) parts.push(p.opponent);
+              const playerInfo = parts.join(' ');
               
               return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
