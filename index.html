@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sleeper League Viewer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Use the Inter font family */
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      /* Simple loading spinner */
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09f;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen text-gray-800 p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header -->
+      <header class="mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Sleeper League Viewer</h1>
+        <p class="text-lg text-gray-600">Enter your league ID and a week to see all rosters and points.</p>
+      </header>
+
+      <!-- Input Form -->
+      <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-2">
+            <label for="leagueId" class="block text-sm font-medium text-gray-700 mb-1">League ID</label>
+            <input
+              type="text"
+              id="leagueId"
+              value="1256757130514415616"
+              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label for="week" class="block text-sm font-medium text-gray-700 mb-1">Week</label>
+            <input
+              type="number"
+              id="week"
+              value="1"
+              min="1"
+              max="18"
+              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div class="flex items-end">
+            <button
+              id="fetchButton"
+              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+            >
+              Fetch League Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading and Message Area -->
+      <div id="messageArea" class="text-center my-6 hidden">
+        <div class="flex justify-center items-center">
+          <div class="spinner mr-3"></div>
+          <span id="messageText" class="text-lg font-medium text-gray-700">Loading...</span>
+        </div>
+      </div>
+
+      <!-- League Info Header -->
+      <div id="leagueInfo" class="mb-6 hidden">
+        <h2 id="leagueName" class="text-2xl font-bold"></h2>
+        <p id="leagueDetails" class="text-md text-gray-600"></p>
+      </div>
+
+      <!-- Results Grid -->
+      <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Team cards will be injected here by JavaScript -->
+      </div>
+
+      <!-- Eliminated Teams Section -->
+      <div id="eliminatedSection" class="mt-12 hidden">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Eliminated Teams</h2>
+        <div id="eliminatedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Eliminated team cards will be injected here -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // --- Globals ---
+      // Cache for all NFL players data. This is a large file and should only be fetched once.
+      let allPlayersData = null;
+      const API_BASE = 'https://api.sleeper.app/v1';
+
+      // --- DOM Elements ---
+      const leagueIdInput = document.getElementById('leagueId');
+      const weekInput = document.getElementById('week');
+      const fetchButton = document.getElementById('fetchButton');
+      const messageArea = document.getElementById('messageArea');
+      const messageText = document.getElementById('messageText');
+      const resultsDiv = document.getElementById('results');
+      const leagueInfoDiv = document.getElementById('leagueInfo');
+      const leagueNameEl = document.getElementById('leagueName');
+      const leagueDetailsEl = document.getElementById('leagueDetails');
+      const eliminatedSection = document.getElementById('eliminatedSection');
+      const eliminatedList = document.getElementById('eliminatedList');
+
+      // --- Event Listener ---
+      fetchButton.addEventListener('click', handleFetchData);
+
+      // --- Main Function ---
+      async function handleFetchData() {
+        const leagueId = leagueIdInput.value.trim();
+        const week = weekInput.value;
+
+        if (!leagueId || !week) {
+          showMessage('Please enter both a League ID and a Week.', true);
+          return;
+        }
+
+        setLoading(true, 'Fetching league data...');
+        clearResults();
+
+        try {
+          // 1. Fetch all players (if not already cached)
+          // This is the largest request and is cached globally
+          if (!allPlayersData) {
+            setLoading(true, 'Fetching all NFL player data (first-time load, may take a moment)...');
+            allPlayersData = await fetchData('players.json');
+          }
+
+          // 2. Fetch league-specific data
+          setLoading(true, 'Fetching league, rosters, and users...');
+          const leagueData = await fetchData(`${API_BASE}/league/${leagueId}`);
+          const leagueRosters = await fetchData(`${API_BASE}/league/${leagueId}/rosters`);
+          const leagueUsers = await fetchData(`${API_BASE}/league/${leagueId}/users`);
+
+          // 3. Fetch stats for the specific week
+          const season = leagueData.season;
+          setLoading(true, `Fetching stats for ${season} Season, Week ${week}...`);
+          const weeklyStats = await fetchData(`${API_BASE}/stats/nfl/regular/${season}/${week}`);
+
+          // 3b. Fetch Projections for the week
+          setLoading(true, `Fetching projections for Week ${week}...`);
+          const weeklyProjections = await fetchData(`${API_BASE}/projections/nfl/regular/${season}/${week}`);
+
+          // 3c. Fetch NFL schedule for the week
+          setLoading(true, 'Fetching NFL schedule...');
+          const nflSchedule = await fetchData(`${API_BASE}/scores/nfl/reg/${season}/${week}`);
+
+          // Convert schedule array to a quick-lookup map
+          const scheduleMap = nflSchedule.reduce((acc, game) => {
+            // game.status can be: 'pre_game', 'inprogress', 'halftime', 'post_game'
+            if (game.home_team) acc[game.home_team] = { status: game.status, game_id: game.game_id };
+            if (game.away_team) acc[game.away_team] = { status: game.status, game_id: game.game_id };
+            return acc;
+          }, {});
+
+          // 4. Process and Render
+          setLoading(true, 'Processing and rendering rosters...');
+          processAndRender(leagueData, leagueRosters, leagueUsers, weeklyStats, weeklyProjections, scheduleMap, allPlayersData, week);
+        } catch (error) {
+          console.error('Error fetching league data:', error);
+          showMessage(`Error: ${error.message}. Check League ID and console for details.`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // --- Data Fetching Utility ---
+      async function fetchData(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: response.statusText }));
+          throw new Error(errorData.message || `Failed to fetch ${url}`);
+        }
+        return await response.json();
+      }
+
+      // --- Data Processing and Rendering ---
+      function processAndRender(league, rosters, users, stats, projections, scheduleMap, allPlayers, week) {
+        // Display league info
+        leagueNameEl.textContent = league.name;
+        leagueDetailsEl.textContent = `${league.season} Season | Week ${week} | ${league.total_rosters} Teams`;
+        leagueInfoDiv.classList.remove('hidden');
+
+        // Find scoring format
+        const scoringKey = getScoringKey(league.scoring_settings);
+
+        // Create a quick-lookup map for user display names
+        const userMap = users.reduce((acc, user) => {
+          acc[user.user_id] = user.display_name;
+          return acc;
+        }, {});
+
+        const allTeamData = [];
+        const eliminatedTeams = [];
+
+        // Loop through each roster
+        for (const roster of rosters) {
+          const ownerId = roster.owner_id;
+          const userDisplayName = ownerId ? userMap[ownerId] : 'Team Available';
+          const teamName = roster.metadata?.team_name || userDisplayName || 'Team ' + roster.roster_id;
+
+          const owner = {
+            ownerName: userDisplayName,
+            teamName: teamName,
+          };
+
+          // --- NEW: Check for eliminated teams (no players) ---
+          if (!roster.players || roster.players.length === 0) {
+            eliminatedTeams.push(owner);
+            continue; // Skip to the next roster
+          }
+
+          const playersInfo = [];
+
+          // Loop through player IDs on this roster
+          for (const playerId of roster.players) {
+            const playerDetails = allPlayers[playerId];
+
+            // Skip if player data doesn't exist (rare)
+            if (!playerDetails) continue;
+
+            const playerName = playerDetails.full_name || `${playerDetails.first_name} ${playerDetails.last_name}`;
+            const position = playerDetails.position;
+
+            // --- UPDATED POINTS LOGIC ---
+            const playerTeam = playerDetails.team; // Use the player's main team to check schedule
+            const gameStatus = playerTeam ? scheduleMap[playerTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
+
+            // Get actual points
+            const actualPoints = stats[playerId] && stats[playerId][scoringKey] !== undefined ? stats[playerId][scoringKey] : 0;
+
+            // Get projected points
+            const projectedPoints =
+              projections[playerId] && projections[playerId][scoringKey] !== undefined ? projections[playerId][scoringKey] : 0;
+
+            let displayPoints = 0;
+            let isProjected = false;
+
+            // 'none' status means game isn't on the weekly schedule (e.g., future week or BYE)
+            // 'pre_game' means game hasn't started.
+            // In both cases, use projection.
+            if (gameStatus === 'none' || gameStatus === 'pre_game') {
+              displayPoints = projectedPoints;
+              isProjected = true;
+            } else {
+              // Game is 'inprogress', 'post_game', 'halftime', etc. Use actual points.
+              displayPoints = actualPoints;
+              isProjected = false;
+            }
+            // --- END UPDATED POINTS LOGIC ---
+
+            playersInfo.push({
+              playerId: playerId, // Add playerId for tracking in optimal calculator
+              name: playerName,
+              position: position,
+              points: displayPoints, // This will be used for calculation (mixed total)
+              actualPoints: actualPoints, // Store for the "Actual Total"
+              projectedPoints: projectedPoints, // Store for reference
+              isProjected: isProjected, // For UI
+              isStarter: false, // Will be set to true if part of optimal lineup
+            });
+          }
+
+          // --- NEW OPTIMAL SCORE CALCULATION ---
+          // Calculate optimal score based on 1QB, 2RB, 2WR, 1TE, 2FLEX (RB/WR/TE)
+          const {
+            totalPoints: teamProjectedTotal,
+            totalActualPoints: teamActualTotal,
+            optimalStarters,
+            orderedStarters,
+          } = calculateOptimalScore(playersInfo);
+
+          // Update the isStarter flag for UI highlighting based on the optimal lineup
+          // We still use the Set for a quick lookup
+          playersInfo.forEach((p) => {
+            if (optimalStarters.has(p.playerId)) {
+              p.isStarter = true;
+            }
+          });
+          // --- END NEW CALCULATION ---
+
+          // --- NEW SORTING LOGIC ---
+          // Get all non-starters
+          const nonStarters = playersInfo.filter((p) => !p.isStarter);
+          // Sort non-starters by points (descending)
+          nonStarters.sort((a, b) => b.points - a.points);
+
+          // Combine the ordered starters (from calculateOptimalScore) with the sorted non-starters
+          const sortedPlayersInfo = [...orderedStarters, ...nonStarters];
+          // --- END NEW SORTING LOGIC ---
+
+          // Add this team's data to the array instead of rendering immediately
+          allTeamData.push({
+            owner,
+            teamTotalPoints: teamProjectedTotal, // This is the mixed total, for sorting
+            teamActualTotal: teamActualTotal, // This is the pure actual total
+            playersInfo: sortedPlayersInfo, // Use the new sorted list
+          });
+        }
+
+        // --- NEW: Sort all teams by total points (descending) ---
+        allTeamData.sort((a, b) => b.teamTotalPoints - a.teamTotalPoints);
+
+        // --- NEW: Render the sorted teams ---
+        for (const team of allTeamData) {
+          createTeamCard(team.owner, team.teamTotalPoints, team.teamActualTotal, team.playersInfo);
+        }
+
+        // --- NEW: Render Eliminated Teams ---
+        if (eliminatedTeams.length > 0) {
+          eliminatedSection.classList.remove('hidden');
+          eliminatedList.innerHTML = ''; // Clear any previous entries
+
+          // Sort eliminated teams alphabetically by team name
+          eliminatedTeams.sort((a, b) => a.teamName.localeCompare(b.teamName));
+
+          for (const owner of eliminatedTeams) {
+            createEliminatedTeamCard(owner);
+          }
+        }
+      }
+
+      // --- New Optimal Score Calculator ---
+      /**
+       * Calculates the optimal "best ball" score based on a fixed roster:
+       * 1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX (RB/WR/TE)
+       */
+      function calculateOptimalScore(allPlayersOnRoster) {
+        const qbs = allPlayersOnRoster.filter((p) => p.position === 'QB').sort((a, b) => b.points - a.points);
+        const rbs = allPlayersOnRoster.filter((p) => p.position === 'RB').sort((a, b) => b.points - a.points);
+        const wrs = allPlayersOnRoster.filter((p) => p.position === 'WR').sort((a, b) => b.points - a.points);
+        const tes = allPlayersOnRoster.filter((p) => p.position === 'TE').sort((a, b) => b.points - a.points);
+
+        let totalPoints = 0;
+        let totalActualPoints = 0; // NEW: For tracking pure actual points
+        const optimalStarterIds = new Set();
+        const orderedStarters = []; // NEW: Array to hold starters in order
+
+        // Helper to add a player to the optimal lineup
+        const addPlayer = (player) => {
+          if (player) {
+            // Use playerId to track, as it's the unique identifier
+            optimalStarterIds.add(player.playerId);
+            totalPoints += player.points; // This is the mixed (display) total
+            totalActualPoints += player.actualPoints; // This is the pure actual total
+            orderedStarters.push(player); // Add the full player object
+          }
+        };
+
+        // 1 QB
+        addPlayer(qbs[0]);
+        // 2 RB
+        addPlayer(rbs[0]);
+        addPlayer(rbs[1]);
+        // 2 WR
+        addPlayer(wrs[0]);
+        addPlayer(wrs[1]);
+        // 1 TE
+        addPlayer(tes[0]);
+
+        // 2 FLEX (RB/WR/TE)
+        // Create a pool of all RBs, WRs, and TEs who haven't been used yet
+        const flexPool = [...rbs, ...wrs, ...tes]
+          .filter((p) => p && !optimalStarterIds.has(p.playerId)) // Check for 'p' in case a position had 0 players
+          .sort((a, b) => b.points - a.points);
+
+        addPlayer(flexPool[0]);
+        addPlayer(flexPool[1]);
+
+        return { totalPoints, totalActualPoints, optimalStarters: optimalStarterIds, orderedStarters: orderedStarters };
+      }
+
+      // --- UI Helper Functions ---
+
+      function createTeamCard(owner, totalProjected, totalActual, players) {
+        const card = document.createElement('div');
+        card.className = 'bg-white shadow-lg rounded-lg p-4 overflow-hidden';
+
+        let playersHtml = players
+          .map(
+            (p) => `
+                <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
+                    <span class="truncate" title="${p.name}">
+                        ${p.name}
+                        <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
+                    </span>
+                    <span class="flex-shrink-0 text-right">
+                        <span class="${p.isStarter ? 'text-black' : 'text-gray-500'}">${p.actualPoints.toFixed(2)}</span>
+                        <span class="italic font-normal text-gray-500 ml-1">(${p.projectedPoints.toFixed(2)})</span>
+                    </span>
+                </li>
+            `,
+          )
+          .join('');
+
+        card.innerHTML = `
+                <div class="border-b border-gray-200 pb-3 mb-3">
+                    <h3 class="text-xl font-bold truncate" title="${owner.teamName}">${owner.teamName}</h3>
+                    <p class="text-sm text-gray-500">${owner.ownerName}</p>
+                    <p class="text-2xl font-bold text-blue-600 mt-2">${totalProjected.toFixed(
+                      2,
+                    )} <span class="text-base font-normal text-gray-600">Projected Total</span></p>
+                    <p class="text-lg font-semibold text-gray-700 mt-1">${totalActual.toFixed(
+                      2,
+                    )} <span class="text-base font-normal text-gray-600">Actual Total</span></p>
+                </div>
+                <ul class="divide-y divide-gray-200">
+                    ${playersHtml}
+                </ul>
+            `;
+        resultsDiv.appendChild(card);
+      }
+
+      function createEliminatedTeamCard(owner) {
+        const card = document.createElement('div');
+        card.className = 'bg-white shadow-lg rounded-lg p-4';
+        card.innerHTML = `
+                <h3 class="text-xl font-bold truncate text-gray-500" title="${owner.teamName}">${owner.teamName}</h3>
+                <p classs="text-sm text-gray-400">${owner.ownerName}</p>
+            `;
+        eliminatedList.appendChild(card);
+      }
+
+      function getScoringKey(settings) {
+        // Handle cases where settings might be null or undefined
+        if (!settings) {
+          return 'pts_std'; // Default to standard
+        }
+        const recPoints = settings.rec || 0;
+        if (recPoints === 1) return 'pts_ppr';
+        if (recPoints === 0.5) return 'pts_half_ppr';
+        return 'pts_std';
+      }
+
+      function setLoading(isLoading, message = 'Loading...') {
+        if (isLoading) {
+          messageArea.classList.remove('hidden');
+          messageText.textContent = message;
+          fetchButton.disabled = true;
+          fetchButton.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+          messageArea.classList.add('hidden');
+          fetchButton.disabled = false;
+          fetchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      }
+
+      function showMessage(message, isError = false) {
+        messageText.textContent = message;
+        messageText.className = isError ? 'text-lg font-medium text-red-600' : 'text-lg font-medium text-gray-700';
+        messageArea.classList.remove('hidden');
+        // Hide spinner if it's just a message
+        messageArea.querySelector('.spinner').classList.add('hidden');
+      }
+
+      function clearResults() {
+        resultsDiv.innerHTML = '';
+        eliminatedList.innerHTML = ''; // Clear eliminated list
+        eliminatedSection.classList.add('hidden'); // Hide eliminated section
+        leagueInfoDiv.classList.add('hidden');
+        leagueNameEl.textContent = '';
+        leagueDetailsEl.textContent = '';
+        // Ensure spinner is visible when clearing for a new load
+        messageArea.querySelector('.spinner').classList.remove('hidden');
+      }
+    </script>
+  </body>
+</html>
