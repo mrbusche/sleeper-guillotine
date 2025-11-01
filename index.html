@@ -320,7 +320,7 @@
             // --- END UPDATED POINTS LOGIC ---
 
             // Get opponent information from schedule
-            const gameInfo = scheduleMap[playerTeam] || { opponent: 'BYE', isHome: false };
+            const gameInfo = scheduleMap[playerTeam] || { opponent: null, isHome: false };
             const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? 'vs ' + gameInfo.opponent : '@ ' + gameInfo.opponent) : 'BYE';
 
             playersInfo.push({
