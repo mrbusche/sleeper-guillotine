@@ -190,7 +190,7 @@
 
           // Convert ESPN schedule data to a quick-lookup map with opponent information
           const scheduleMap = {};
-          if (espnScheduleData && espnScheduleData.events) {
+          if (espnScheduleData?.events) {
             for (const event of espnScheduleData.events) {
               if (!event.competitions || !event.competitions[0]) continue;
 
@@ -279,7 +279,7 @@
         for (const roster of rosters) {
           const ownerId = roster.owner_id;
           const userDisplayName = ownerId ? userMap[ownerId] : 'Team Available';
-          const teamName = roster.metadata?.team_name || userDisplayName || 'Team ' + roster.roster_id;
+          const teamName = roster.metadata?.team_name || userDisplayName || `Team ${roster.roster_id}`;
 
           const owner = {
             ownerName: userDisplayName,
@@ -333,7 +333,7 @@
 
             // Get opponent information from schedule (using ESPN team abbreviation)
             const gameInfo = scheduleMap[espnTeam] || { opponent: null, isHome: false };
-            const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? 'vs ' + gameInfo.opponent : '@ ' + gameInfo.opponent) : 'BYE';
+            const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? `vs ${gameInfo.opponent}` : `@ ${gameInfo.opponent}`) : 'BYE';
 
             playersInfo.push({
               playerId: playerId, // Add playerId for tracking in optimal calculator
@@ -476,7 +476,7 @@
           `
           : '';
 
-        let playersHtml = players
+        const playersHtml = players
           .map((p) => {
             // Build player info display string with proper spacing
             const parts = [p.name];
@@ -528,7 +528,7 @@
         card.className = 'bg-white shadow-lg rounded-lg p-4';
         card.innerHTML = `
                 <h3 class="text-xl font-bold truncate text-gray-500" title="${owner.teamName}">${owner.teamName}</h3>
-                <p classs="text-sm text-gray-400">${owner.ownerName}</p>
+                <p class="text-sm text-gray-400">${owner.ownerName}</p>
             `;
         eliminatedList.appendChild(card);
       }
