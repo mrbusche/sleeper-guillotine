@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prettier:fix": "prettier --write .",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "prettier": "3.6.2",
     "vite": "npm:rolldown-vite@7.1.14"
   },
   "overrides": {
