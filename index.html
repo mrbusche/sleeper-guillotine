@@ -352,9 +352,8 @@
           // --- NEW OPTIMAL SCORE CALCULATION ---
           // Calculate optimal score based on 1QB, 2RB, 2WR, 1TE, 2FLEX (RB/WR/TE)
           const {
-            totalPoints: teamMixedTotal,
+            totalPoints: teamProjectedTotal,
             totalActualPoints: teamActualTotal,
-            totalProjectedPoints: teamProjectedTotal,
             optimalStarters,
             orderedStarters,
           } = calculateOptimalScore(playersInfo);
@@ -381,8 +380,7 @@
           // Add this team's data to the array instead of rendering immediately
           allTeamData.push({
             owner,
-            teamTotalPoints: teamMixedTotal, // This is the mixed total, for sorting
-            teamProjectedTotal: teamProjectedTotal, // This is the pure projected total
+            teamTotalPoints: teamProjectedTotal, // This is the mixed total, for sorting
             teamActualTotal: teamActualTotal, // This is the pure actual total
             playersInfo: sortedPlayersInfo, // Use the new sorted list
           });
@@ -393,7 +391,7 @@
 
         // --- NEW: Render the sorted teams ---
         for (const team of allTeamData) {
-          createTeamCard(team.owner, team.teamProjectedTotal, team.teamActualTotal, team.playersInfo);
+          createTeamCard(team.owner, team.teamTotalPoints, team.teamActualTotal, team.playersInfo);
         }
 
         // --- NEW: Render Eliminated Teams ---
@@ -423,7 +421,6 @@
 
         let totalPoints = 0;
         let totalActualPoints = 0; // NEW: For tracking pure actual points
-        let totalProjectedPoints = 0; // NEW: For tracking pure projected points
         const optimalStarterIds = new Set();
         const orderedStarters = []; // NEW: Array to hold starters in order
 
@@ -433,7 +430,6 @@
             // Use playerId to track, as it's the unique identifier
             optimalStarterIds.add(player.playerId);
             totalPoints += player.points; // This is the mixed (display) total for lineup selection
-            totalProjectedPoints += player.projectedPoints; // This is the pure projected total
             // Only add to actual total if player has actual points > 0
             if (player.actualPoints > 0) {
               totalActualPoints += player.actualPoints; // This is the pure actual total
@@ -465,7 +461,6 @@
         return {
           totalPoints,
           totalActualPoints,
-          totalProjectedPoints,
           optimalStarters: optimalStarterIds,
           orderedStarters: orderedStarters,
         };
