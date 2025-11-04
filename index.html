@@ -387,7 +387,7 @@
         }
 
         // --- NEW: Sort all teams by total points (descending) ---
-        allTeamData.sort((a, b) => b.teamTotalPoints - a.teamTotalPoints);
+        allTeamData.sort((a, b) => a.teamTotalPoints - b.teamTotalPoints);
 
         // --- NEW: Render the sorted teams ---
         for (const team of allTeamData) {
@@ -508,12 +508,12 @@
                           ${totalProjected.toFixed(2)}
                           <span class="text-base font-normal text-gray-600">Projected Total</span>
                         </p>
-                        <p class="text-lg font-semibold text-gray-700 mt-1">
+                        <!--<p class="text-lg font-semibold text-gray-700 mt-1">
                           ${totalActual.toFixed(2)}
                           <span class="text-base font-normal text-gray-600">Actual Total</span>
-                        </p>
+                        </p>-->
                       </div>
-                      ${singleCheckIconHtml}
+                      <!-- ${singleCheckIconHtml} -->
                     </div>
                 </div>
                 <ul class="divide-y divide-gray-200">
@@ -528,7 +528,6 @@
         card.className = 'bg-white shadow-lg rounded-lg p-4';
         card.innerHTML = `
                 <h3 class="text-xl font-bold truncate text-gray-500" title="${owner.teamName}">${owner.teamName}</h3>
-                <p class="text-sm text-gray-400">${owner.ownerName}</p>
             `;
         eliminatedList.appendChild(card);
       }
