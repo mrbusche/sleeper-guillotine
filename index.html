@@ -307,10 +307,21 @@
             // --- UPDATED POINTS LOGIC ---
             const playerTeam = playerDetails.team; // Sleeper team abbreviation
             const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null; // Convert to ESPN abbreviation
-            const gameStatus = espnTeam ? scheduleMap[espnTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
+            let gameStatus = espnTeam ? scheduleMap[espnTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
 
             // Get actual points
             const actualPoints = stats[playerId] && stats[playerId][scoringKey] !== undefined ? stats[playerId][scoringKey] : 0;
+
+            // Check if game is in progress based on stats data
+            // If stats exist for the player but tm_off_snp is missing, the game is in progress
+            const hasStats = stats[playerId] && Object.keys(stats[playerId]).length > 0;
+            const hasTmOffSnp = stats[playerId] && stats[playerId].tm_off_snp !== undefined;
+            const isGameInProgress = hasStats && !hasTmOffSnp;
+
+            // Override ESPN status if stats indicate game is in progress
+            if (isGameInProgress) {
+              gameStatus = 'inprogress';
+            }
 
             // Get projected points
             const projectedPoints =
@@ -346,6 +357,7 @@
               projectedPoints: projectedPoints, // Store for reference
               isProjected: isProjected, // For UI
               isStarter: false, // Will be set to true if part of optimal lineup
+              gameStatus: gameStatus, // Add game status for UI display
             });
           }
 
@@ -484,11 +496,15 @@
             if (p.opponent) parts.push(p.opponent);
             const playerInfo = parts.join(' ');
 
+            // Add "In Progress" indicator if game is in progress
+            const inProgressBadge = p.gameStatus === 'inprogress' ? '🚧' : '';
+
             return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
                     <span class="truncate" title="${p.name}">
                         ${playerInfo}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
+                        ${inProgressBadge}
                     </span>
                     <span class="flex-shrink-0 text-right">
                         <span class="${p.isStarter ? 'text-black' : 'text-gray-500'}">${p.actualPoints.toFixed(2)}</span>
