@@ -107,9 +107,10 @@
       const ESPN_REGULAR_SEASON_TYPE = 2; // ESPN API constant for regular season
 
       // Team abbreviation mapping: Sleeper -> ESPN
-      // Most teams use the same abbreviations, but Jacksonville differs
+      // Most teams use the same abbreviations, but some differ
       const TEAM_ABBR_SLEEPER_TO_ESPN = {
         JAC: 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
+        WAS: 'WSH', // Washington: Sleeper uses WAS, ESPN uses WSH
       };
 
       // Convert Sleeper team abbreviation to ESPN abbreviation
@@ -209,7 +210,12 @@
 
               // Determine game status
               let status = 'pre_game';
-              if (competition.status?.type?.state === 'in') {
+              const statusName = competition.status?.type?.name;
+              if (statusName === 'STATUS_IN_PROGRESS') {
+                status = 'inprogress';
+              } else if (statusName === 'STATUS_FINAL') {
+                status = 'post_game';
+              } else if (competition.status?.type?.state === 'in') {
                 status = 'inprogress';
               } else if (competition.status?.type?.state === 'post') {
                 status = 'post_game';
@@ -316,12 +322,6 @@
             // If stats exist for the player but tm_off_snp is missing, the game is in progress
             const hasStats = stats[playerId] && Object.keys(stats[playerId]).length > 0;
             const hasTmOffSnp = stats[playerId] && stats[playerId].tm_off_snp !== undefined;
-            const isGameInProgress = hasStats && !hasTmOffSnp;
-
-            // Override ESPN status if stats indicate game is in progress
-            if (isGameInProgress) {
-              gameStatus = 'inprogress';
-            }
 
             // Get projected points
             const projectedPoints =
