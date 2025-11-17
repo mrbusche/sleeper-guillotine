@@ -27,14 +27,25 @@ jobs:
       - name: Prune players
         run: node scripts/prune_players.js
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format code
+        run: npm run prettier:fix
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: 'chore: update players data'
-          branch: update-players
-          branch-suffix: timestamp
-          title: 'chore: update players data'
-          body: 'Automated update of players data from Sleeper API'
-          add-paths: |
-            public/players.json
-            public/players_pruned.json
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            BRANCH_NAME="update-players-$(date +%Y%m%d-%H%M%S)"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b $BRANCH_NAME
+            git add public/players.json public/players_pruned.json
+            git commit -m "chore: update players data"
+            git push origin $BRANCH_NAME
+            gh pr create --title "chore: update players data" --body "Automated update of players data from Sleeper API" --base main --head $BRANCH_NAME
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
