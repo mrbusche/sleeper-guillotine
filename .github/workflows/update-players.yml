@@ -23,9 +23,6 @@ jobs:
       - name: Prune players
         run: node scripts/prune_players.js
 
-      - name: Move pruned file to public directory
-        run: mv players_pruned.json public/players_pruned.json
-
       - name: Create Pull Request
         run: |
           if git diff --quiet; then
