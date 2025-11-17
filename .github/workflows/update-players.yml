@@ -1,0 +1,39 @@
+name: Update Players Data
+
+on:
+  schedule:
+    - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  update-players:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download latest players.json
+        run: curl -sS https://api.sleeper.app/v1/players/nfl -o players.json
+
+      - name: Prune players
+        run: node scripts/prune_players.js
+
+      - name: Move pruned file to public directory
+        run: mv players_pruned.json public/players_pruned.json
+
+      - name: Commit and push if changes detected
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add players.json public/players_pruned.json
+            git commit -m "chore: update players data"
+            git push
+          fi

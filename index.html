@@ -166,7 +166,9 @@
           // This is the largest request and is cached globally
           if (!allPlayersData) {
             setLoading(true, 'Fetching all NFL player data (first-time load, may take a moment)...');
-            allPlayersData = await fetchData('players_pruned.json');
+            // Cache bust daily to ensure browser fetches fresh pruned players file
+            const cacheBuster = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            allPlayersData = await fetchData(`players_pruned.json?v=${cacheBuster}`);
           }
 
           // 2. Fetch league-specific data
