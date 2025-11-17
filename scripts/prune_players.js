@@ -1,8 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
-const src = path.join(__dirname, '..', 'players.json');
-const out = path.join(__dirname, '..', 'players_pruned.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const src = join(__dirname, '..', 'public', 'players.json');
+const out = join(__dirname, '..', 'public', 'players_pruned.json');
 
 // Fields to keep (adjust if you need others)
 const KEEP = new Set(['player_id', 'first_name', 'last_name', 'full_name', 'position', 'team', 'status', 'bye_week', 'fantasy_positions']);
@@ -20,7 +23,7 @@ function pruneObject(obj) {
 }
 
 try {
-  const raw = fs.readFileSync(src, 'utf8');
+  const raw = readFileSync(src, 'utf8');
   const data = JSON.parse(raw);
 
   let pruned;
@@ -43,7 +46,7 @@ try {
     throw new Error('Unexpected players.json format');
   }
 
-  fs.writeFileSync(out, JSON.stringify(pruned, null, 2));
+  writeFileSync(out, JSON.stringify(pruned, null, 2));
   console.log('Pruned players written to', out);
 } catch (err) {
   console.error('Error:', err.message);
