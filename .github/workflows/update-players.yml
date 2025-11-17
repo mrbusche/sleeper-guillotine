@@ -32,7 +32,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git checkout -b $BRANCH_NAME
-            git add players.json public/players_pruned.json
+            git add public/players.json public/players_pruned.json
             git commit -m "chore: update players data"
             git push origin $BRANCH_NAME
             gh pr create --title "chore: update players data" --body "Automated update of players data from Sleeper API" --base main --head $BRANCH_NAME
