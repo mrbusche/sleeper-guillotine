@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -8,7 +8,18 @@ const src = join(__dirname, '..', 'public', 'players.json');
 const out = join(__dirname, '..', 'public', 'players_pruned.json');
 
 // Fields to keep (adjust if you need others)
-const KEEP = new Set(['player_id', 'first_name', 'last_name', 'full_name', 'position', 'team', 'status', 'bye_week', 'fantasy_positions']);
+const KEEP = new Set([
+  'player_id',
+  'first_name',
+  'last_name',
+  'full_name',
+  'position',
+  'team',
+  'status',
+  'bye_week',
+  'fantasy_positions',
+  'injury_status',
+]);
 
 function pruneObject(obj) {
   const res = {};
@@ -23,8 +34,13 @@ function pruneObject(obj) {
 }
 
 try {
-  const raw = readFileSync(src, 'utf8');
-  const data = JSON.parse(raw);
+  console.log('Downloading players data...');
+  const response = await fetch('https://api.sleeper.app/v1/players/nfl');
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+  const data = await response.json();
+
+  writeFileSync(src, JSON.stringify(data, null, 2));
+  console.log('Raw players written to', src);
 
   let pruned;
   if (Array.isArray(data)) {
