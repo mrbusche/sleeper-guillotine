@@ -311,6 +311,7 @@
 
             const playerName = playerDetails.full_name || `${playerDetails.first_name} ${playerDetails.last_name}`;
             const position = playerDetails.position;
+            const injuryStatus = playerDetails.injury_status;
 
             // --- UPDATED POINTS LOGIC ---
             const playerTeam = playerDetails.team; // Sleeper team abbreviation
@@ -360,6 +361,7 @@
               isProjected: isProjected, // For UI
               isStarter: false, // Will be set to true if part of optimal lineup
               gameStatus: gameStatus, // Add game status for UI display
+              injuryStatus: injuryStatus,
             });
           }
 
@@ -500,6 +502,7 @@
 
             // Add "In Progress" indicator if game is in progress
             const inProgressBadge = p.gameStatus === 'inprogress' ? '🚧' : '';
+            const injuryBadge = p.injuryStatus === 'Out' ? '🤕' : '';
 
             return `
                 <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
@@ -507,6 +510,7 @@
                         ${playerInfo}
                         <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
                         ${inProgressBadge}
+                        ${injuryBadge}
                     </span>
                     <span class="flex-shrink-0 text-right">
                         <span class="${p.isStarter ? 'text-black' : 'text-gray-500'}">${p.actualPoints.toFixed(2)}</span>
