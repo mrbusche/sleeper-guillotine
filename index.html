@@ -6,11 +6,9 @@
     <link href="/src/style.css" rel="stylesheet" />
     <title>Sleeper League Viewer</title>
     <style>
-      /* Use the Inter font family */
       body {
         font-family: 'Inter', sans-serif;
       }
-      /* Simple loading spinner */
       .spinner {
         border: 4px solid rgba(0, 0, 0, 0.1);
         width: 36px;
@@ -31,13 +29,11 @@
   </head>
   <body class="bg-gray-100 min-h-screen text-gray-800 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-      <!-- Header -->
       <header class="mb-6">
         <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Sleeper Guillotine League Viewer</h1>
         <p class="text-lg text-gray-600">Enter your league ID and a week to see all rosters and points.</p>
       </header>
 
-      <!-- Input Form -->
       <div class="bg-white p-6 rounded-lg shadow-md mb-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="md:col-span-2">
@@ -63,7 +59,7 @@
           <div class="flex items-end">
             <button
               id="fetchButton"
-              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Fetch League Data
             </button>
@@ -71,7 +67,6 @@
         </div>
       </div>
 
-      <!-- Loading and Message Area -->
       <div id="messageArea" class="text-center my-6 hidden">
         <div class="flex justify-center items-center">
           <div class="spinner mr-3"></div>
@@ -79,54 +74,48 @@
         </div>
       </div>
 
-      <!-- League Info Header -->
       <div id="leagueInfo" class="mb-6 hidden">
         <h2 id="leagueName" class="text-2xl font-bold"></h2>
         <p id="leagueDetails" class="text-md text-gray-600"></p>
       </div>
 
-      <!-- Results Grid -->
-      <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Team cards will be injected here by JavaScript -->
-      </div>
+      <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-      <!-- Eliminated Teams Section -->
       <div id="eliminatedSection" class="mt-12 hidden">
         <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Eliminated Teams</h2>
-        <div id="eliminatedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Eliminated team cards will be injected here -->
-        </div>
+        <div id="eliminatedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </div>
 
     <script type="module">
       // --- Globals ---
-      // Cache for all NFL players data. This is a large file and should only be fetched once.
+      // Cache for all NFL players data
       let allPlayersData = null;
+      let abortController = null; // Controller to cancel pending fetch requests
       const API_BASE = 'https://api.sleeper.app/v1';
-      const ESPN_REGULAR_SEASON_TYPE = 2; // ESPN API constant for regular season
+      const ESPN_REGULAR_SEASON_TYPE = 2;
 
-      // Team abbreviation mapping: Sleeper -> ESPN
-      // Most teams use the same abbreviations, but some differ
       const TEAM_ABBR_SLEEPER_TO_ESPN = {
-        JAC: 'JAX', // Jacksonville: Sleeper uses JAC, ESPN uses JAX
-        WAS: 'WSH', // Washington: Sleeper uses WAS, ESPN uses WSH
+        JAC: 'JAX',
+        WAS: 'WSH',
       };
 
-      // Convert Sleeper team abbreviation to ESPN abbreviation
+      const numberFormatter = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
       function convertTeamAbbr(sleeperAbbr) {
         return TEAM_ABBR_SLEEPER_TO_ESPN[sleeperAbbr] || sleeperAbbr;
       }
 
-      // Calculate current NFL week based on date
       function getCurrentNFLWeek() {
         const today = new Date();
-        // Week 1 starts on September 5th, 2025
-        const seasonStart = new Date(2025, 8, 2); // Month is 0-based, so 8 is September
+        const seasonStart = new Date(2025, 8, 2);
         const diffTime = Math.abs(today - seasonStart);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const currentWeek = Math.ceil(diffDays / 7);
-        return Math.min(Math.max(currentWeek, 1), 18); // Ensure week is between 1 and 18
+        return Math.min(Math.max(currentWeek, 1), 18);
       }
 
       // --- DOM Elements ---
@@ -158,425 +147,337 @@
           return;
         }
 
+        // Cancel previous pending requests
+        if (abortController) {
+          abortController.abort();
+        }
+        abortController = new AbortController();
+        const signal = abortController.signal;
+
         setLoading(true, 'Fetching league data...');
         clearResults();
 
         try {
-          // 1. Fetch all players (if not already cached)
-          // This is the largest request and is cached globally
+          // 1. Start fetching Players Data (if not cached)
+          let playersPromise = null;
           if (!allPlayersData) {
-            setLoading(true, 'Fetching all NFL player data (first-time load, may take a moment)...');
-            // Cache bust daily to ensure browser fetches fresh pruned players file
-            const cacheBuster = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-            allPlayersData = await fetchData(`players_pruned.json?v=${cacheBuster}`);
+            // We do not attach the abort signal here so the large file fetch persists
+            // even if the user cancels the league fetch, ensuring it's available next time.
+            const cacheBuster = new Date().toISOString().slice(0, 10);
+            playersPromise = fetchData(`players_pruned.json?v=${cacheBuster}`);
+          } else {
+            playersPromise = Promise.resolve(allPlayersData);
           }
 
-          // 2. Fetch league-specific data
-          setLoading(true, 'Fetching league, rosters, and users...');
-          const leagueData = await fetchData(`${API_BASE}/league/${leagueId}`);
-          const leagueRosters = await fetchData(`${API_BASE}/league/${leagueId}/rosters`);
-          const leagueUsers = await fetchData(`${API_BASE}/league/${leagueId}/users`);
+          // 2. Fetch League, Rosters, and Users in Parallel
+          setLoading(true, 'Fetching league info...');
+          const [leagueData, leagueRosters, leagueUsers] = await Promise.all([
+            fetchData(`${API_BASE}/league/${leagueId}`, { signal }),
+            fetchData(`${API_BASE}/league/${leagueId}/rosters`, { signal }),
+            fetchData(`${API_BASE}/league/${leagueId}/users`, { signal }),
+          ]);
 
-          // 3. Fetch stats for the specific week
+          // 3. Fetch Stats, Projections, and Schedule in Parallel
           const season = leagueData.season;
-          setLoading(true, `Fetching stats for ${season} Season, Week ${week}...`);
-          const weeklyStats = await fetchData(`${API_BASE}/stats/nfl/regular/${season}/${week}`);
+          setLoading(true, `Fetching Week ${week} stats & projections...`);
 
-          // 3b. Fetch Projections for the week
-          setLoading(true, `Fetching projections for Week ${week}...`);
-          const weeklyProjections = await fetchData(`${API_BASE}/projections/nfl/regular/${season}/${week}`);
-
-          // 3c. Fetch NFL schedule for the week using ESPN API
-          setLoading(true, 'Fetching NFL schedule...');
           const espnScheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${week}`;
-          const espnScheduleData = await fetchData(espnScheduleUrl);
 
-          // Convert ESPN schedule data to a quick-lookup map with opponent information
-          const scheduleMap = {};
-          if (espnScheduleData?.events) {
-            for (const event of espnScheduleData.events) {
-              if (!event.competitions || !event.competitions[0]) continue;
+          const [weeklyStats, weeklyProjections, espnScheduleData, resolvedPlayers] = await Promise.all([
+            fetchData(`${API_BASE}/stats/nfl/regular/${season}/${week}`, { signal }),
+            fetchData(`${API_BASE}/projections/nfl/regular/${season}/${week}`, { signal }),
+            fetchData(espnScheduleUrl, { signal }),
+            playersPromise, // Ensure players are loaded before we proceed
+          ]);
 
-              const competition = event.competitions[0];
-              const competitors = competition.competitors;
+          // Update global cache
+          if (!allPlayersData) allPlayersData = resolvedPlayers;
 
-              // Find home and away teams
-              const homeTeam = competitors.find((c) => c.homeAway === 'home');
-              const awayTeam = competitors.find((c) => c.homeAway === 'away');
+          // 4. Process Schedule
+          const scheduleMap = processSchedule(espnScheduleData);
 
-              if (!homeTeam || !awayTeam) continue;
-
-              // Get team abbreviations from ESPN
-              const homeAbbr = homeTeam.team?.abbreviation;
-              const awayAbbr = awayTeam.team?.abbreviation;
-
-              // Determine game status
-              let status = 'pre_game';
-              const statusName = competition.status?.type?.name;
-              if (statusName === 'STATUS_IN_PROGRESS') {
-                status = 'inprogress';
-              } else if (statusName === 'STATUS_FINAL') {
-                status = 'post_game';
-              } else if (competition.status?.type?.state === 'in') {
-                status = 'inprogress';
-              } else if (competition.status?.type?.state === 'post') {
-                status = 'post_game';
-              }
-
-              if (homeAbbr) {
-                scheduleMap[homeAbbr] = {
-                  status: status,
-                  game_id: event.id,
-                  opponent: awayAbbr,
-                  isHome: true,
-                };
-              }
-
-              if (awayAbbr) {
-                scheduleMap[awayAbbr] = {
-                  status: status,
-                  game_id: event.id,
-                  opponent: homeAbbr,
-                  isHome: false,
-                };
-              }
-            }
-          }
-
-          // 4. Process and Render
-          setLoading(true, 'Processing and rendering rosters...');
+          // 5. Render
+          setLoading(true, 'Rendering...');
           processAndRender(leagueData, leagueRosters, leagueUsers, weeklyStats, weeklyProjections, scheduleMap, allPlayersData, week);
         } catch (error) {
+          if (error.name === 'AbortError') {
+            console.log('Fetch aborted');
+            return;
+          }
           console.error('Error fetching league data:', error);
-          showMessage(`Error: ${error.message}. Check League ID and console for details.`, true);
+          showMessage(`Error: ${error.message}. Check League ID and console.`, true);
         } finally {
-          setLoading(false);
+          // Only stop loading if we weren't aborted (meaning a new request hasn't started)
+          if (!signal.aborted) {
+            setLoading(false);
+          }
         }
       }
 
-      // --- Data Fetching Utility ---
-      async function fetchData(url) {
-        const response = await fetch(url);
+      async function fetchData(url, options = {}) {
+        const response = await fetch(url, options);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: response.statusText }));
           throw new Error(errorData.message || `Failed to fetch ${url}`);
         }
-        return await response.json();
+        return response.json();
       }
 
-      // --- Data Processing and Rendering ---
+      function processSchedule(espnScheduleData) {
+        const scheduleMap = {};
+        if (!espnScheduleData?.events) return scheduleMap;
+
+        for (const event of espnScheduleData.events) {
+          const competition = event.competitions?.[0];
+          if (!competition) continue;
+
+          const homeTeam = competition.competitors.find((c) => c.homeAway === 'home');
+          const awayTeam = competition.competitors.find((c) => c.homeAway === 'away');
+
+          if (!homeTeam || !awayTeam) continue;
+
+          const homeAbbr = homeTeam.team?.abbreviation;
+          const awayAbbr = awayTeam.team?.abbreviation;
+
+          let status = 'pre_game';
+          const typeName = competition.status?.type?.name;
+          const state = competition.status?.type?.state;
+
+          if (typeName === 'STATUS_IN_PROGRESS' || state === 'in') {
+            status = 'inprogress';
+          } else if (typeName === 'STATUS_FINAL' || state === 'post') {
+            status = 'post_game';
+          }
+
+          if (homeAbbr) {
+            scheduleMap[homeAbbr] = { status, game_id: event.id, opponent: awayAbbr, isHome: true };
+          }
+          if (awayAbbr) {
+            scheduleMap[awayAbbr] = { status, game_id: event.id, opponent: homeAbbr, isHome: false };
+          }
+        }
+        return scheduleMap;
+      }
+
       function processAndRender(league, rosters, users, stats, projections, scheduleMap, allPlayers, week) {
-        // Display league info
         leagueNameEl.textContent = league.name;
         leagueDetailsEl.textContent = `${league.season} Season | Week ${week} | ${league.total_rosters} Teams`;
         leagueInfoDiv.classList.remove('hidden');
 
-        // Find scoring format
         const scoringKey = getScoringKey(league.scoring_settings);
 
-        // Create a quick-lookup map for user display names
-        const userMap = users.reduce((acc, user) => {
-          acc[user.user_id] = user.display_name;
-          return acc;
-        }, {});
+        // Modern Object.fromEntries for cleaner map creation
+        const userMap = Object.fromEntries(users.map((u) => [u.user_id, u.display_name]));
 
         const allTeamData = [];
         const eliminatedTeams = [];
 
-        // Loop through each roster
         for (const roster of rosters) {
-          const ownerId = roster.owner_id;
-          const userDisplayName = ownerId ? userMap[ownerId] : 'Team Available';
-          const teamName = roster.metadata?.team_name || userDisplayName || `Team ${roster.roster_id}`;
+          const { owner_id, roster_id, players, metadata } = roster;
 
-          const owner = {
-            ownerName: userDisplayName,
-            teamName: teamName,
-          };
+          const userDisplayName = owner_id ? userMap[owner_id] : 'Team Available';
+          const teamName = metadata?.team_name || userDisplayName || `Team ${roster_id}`;
+          const owner = { ownerName: userDisplayName, teamName };
 
-          // --- NEW: Check for eliminated teams (no players) ---
-          if (!roster.players || roster.players.length === 0) {
+          if (!players || players.length === 0) {
             eliminatedTeams.push(owner);
-            continue; // Skip to the next roster
+            continue;
           }
 
-          const playersInfo = [];
+          const playersInfo = players
+            .map((playerId) => {
+              const playerDetails = allPlayers[playerId];
+              if (!playerDetails) return null;
 
-          // Loop through player IDs on this roster
-          for (const playerId of roster.players) {
-            const playerDetails = allPlayers[playerId];
+              const { full_name, first_name, last_name, position, injury_status, team: playerTeam } = playerDetails;
+              const playerName = full_name || `${first_name} ${last_name}`;
+              const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null;
+              const gameInfo = scheduleMap[espnTeam] || { status: 'none', opponent: null, isHome: false };
 
-            // Skip if player data doesn't exist (rare)
-            if (!playerDetails) continue;
+              // Determine Points
+              const actualPoints = stats[playerId]?.[scoringKey] ?? 0;
+              const projectedPoints = projections[playerId]?.[scoringKey] ?? 0;
 
-            const playerName = playerDetails.full_name || `${playerDetails.first_name} ${playerDetails.last_name}`;
-            const position = playerDetails.position;
-            const injuryStatus = playerDetails.injury_status;
+              // Logic: Use Project if game hasn't started (or isn't scheduled), otherwise Actual
+              let displayPoints = 0;
+              let isProjected = false;
 
-            // --- UPDATED POINTS LOGIC ---
-            const playerTeam = playerDetails.team; // Sleeper team abbreviation
-            const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null; // Convert to ESPN abbreviation
-            let gameStatus = espnTeam ? scheduleMap[espnTeam]?.status || 'none' : 'none'; // 'none' for FA or BYE
+              if (gameInfo.status === 'none' || gameInfo.status === 'pre_game') {
+                displayPoints = projectedPoints;
+                isProjected = true;
+              } else {
+                displayPoints = actualPoints;
+              }
 
-            // Get actual points
-            const actualPoints = stats[playerId] && stats[playerId][scoringKey] !== undefined ? stats[playerId][scoringKey] : 0;
+              const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? `vs ${gameInfo.opponent}` : `@ ${gameInfo.opponent}`) : 'BYE';
 
-            // Check if game is in progress based on stats data
-            // If stats exist for the player but tm_off_snp is missing, the game is in progress
-            const hasStats = stats[playerId] && Object.keys(stats[playerId]).length > 0;
-            const hasTmOffSnp = stats[playerId] && stats[playerId].tm_off_snp !== undefined;
+              return {
+                playerId,
+                name: playerName,
+                position,
+                playerTeam,
+                opponent: opponentDisplay,
+                points: displayPoints,
+                actualPoints,
+                projectedPoints,
+                isProjected,
+                isStarter: false,
+                gameStatus: gameInfo.status,
+                injuryStatus: injury_status,
+              };
+            })
+            .filter(Boolean); // Remove nulls
 
-            // Get projected points
-            const projectedPoints =
-              projections[playerId] && projections[playerId][scoringKey] !== undefined ? projections[playerId][scoringKey] : 0;
+          // Optimal Calculations
+          const { totalScore: teamProjectedTotal, optimalStarters, orderedStarters } = calculateOptimalScore(playersInfo, 'points');
+          const { totalScore: teamActualTotal } = calculateOptimalScore(playersInfo, 'actualPoints');
 
-            let displayPoints = 0;
-            let isProjected = false;
+          // Mark starters
+          playersInfo.forEach((p) => {
+            if (optimalStarters.has(p.playerId)) p.isStarter = true;
+          });
 
-            // 'none' status means game isn't on the weekly schedule (e.g., future week or BYE)
-            // 'pre_game' means game hasn't started.
-            // In both cases, use projection.
-            if (gameStatus === 'none' || gameStatus === 'pre_game') {
-              displayPoints = projectedPoints;
-              isProjected = true;
-            } else {
-              // Game is 'inprogress', 'post_game', 'halftime', etc. Use actual points.
-              displayPoints = actualPoints;
-            }
-            // --- END UPDATED POINTS LOGIC ---
-
-            // Get opponent information from schedule (using ESPN team abbreviation)
-            const gameInfo = scheduleMap[espnTeam] || { opponent: null, isHome: false };
-            const opponentDisplay = gameInfo.opponent ? (gameInfo.isHome ? `vs ${gameInfo.opponent}` : `@ ${gameInfo.opponent}`) : 'BYE';
-
-            playersInfo.push({
-              playerId: playerId, // Add playerId for tracking in optimal calculator
-              name: playerName,
-              position: position,
-              playerTeam: playerTeam,
-              opponent: opponentDisplay,
-              points: displayPoints, // This will be used for calculation (mixed total)
-              actualPoints: actualPoints, // Store for the "Actual Total"
-              projectedPoints: projectedPoints, // Store for reference
-              isProjected: isProjected, // For UI
-              isStarter: false, // Will be set to true if part of optimal lineup
-              gameStatus: gameStatus, // Add game status for UI display
-              injuryStatus: injuryStatus,
-            });
-          }
-
-          // --- NEW OPTIMAL SCORE CALCULATION ---
-          // Calculate optimal score based on 1QB, 2RB, 2WR, 1TE, 2FLEX (RB/WR/TE)
-
-          // 1. Calculate Projected Best Ball (determines starters for UI)
-          const projectedOutcome = calculateOptimalScore(playersInfo, 'points');
-          const teamProjectedTotal = projectedOutcome.totalScore;
-          const optimalStarters = projectedOutcome.optimalStarters;
-          const orderedStarters = projectedOutcome.orderedStarters;
-
-          // 2. Calculate Actual Best Ball (determines "Actual" score displayed)
-          // This finds the best possible score using only actual points scored so far
-          const actualOutcome = calculateOptimalScore(playersInfo, 'actualPoints');
-          const teamActualTotal = actualOutcome.totalScore;
-
-          // Update the isStarter flag for UI highlighting based on the optimal lineup (Projected)
-          // We still use the Set for a quick lookup
-          for (const p of playersInfo) {
-            if (optimalStarters.has(p.playerId)) {
-              p.isStarter = true;
-            }
-          }
-          // --- END NEW CALCULATION ---
-
-          // --- NEW SORTING LOGIC ---
-          // Get all non-starters
-          const nonStarters = playersInfo.filter((p) => !p.isStarter);
-          // Sort non-starters by points (descending)
-          nonStarters.sort((a, b) => b.points - a.points);
-
-          // Combine the ordered starters (from calculateOptimalScore) with the sorted non-starters
+          // Sort: Starters first, then by points descending.
+          // Using modern toSorted to avoid mutating the original arrays if we were reusing them
+          const nonStarters = playersInfo.filter((p) => !p.isStarter).toSorted((a, b) => b.points - a.points);
           const sortedPlayersInfo = [...orderedStarters, ...nonStarters];
-          // --- END NEW SORTING LOGIC ---
 
-          // Add this team's data to the array instead of rendering immediately
           allTeamData.push({
             owner,
-            teamTotalPoints: teamProjectedTotal, // This is the mixed total, for sorting
-            teamActualTotal: teamActualTotal, // This is the pure actual total
-            playersInfo: sortedPlayersInfo, // Use the new sorted list
+            teamTotalPoints: teamProjectedTotal,
+            teamActualTotal,
+            playersInfo: sortedPlayersInfo,
           });
         }
 
-        // --- NEW: Sort all teams by total points (descending) ---
+        // Sort teams by Total Points Ascending (Lowest score first for Guillotine)
         allTeamData.sort((a, b) => a.teamTotalPoints - b.teamTotalPoints);
 
-        // --- NEW: Render the sorted teams ---
-        for (const team of allTeamData) {
-          createTeamCard(team.owner, team.teamTotalPoints, team.teamActualTotal, team.playersInfo);
-        }
+        // Render Active Teams
+        const teamCards = allTeamData.map((team) =>
+          createTeamCardHTML(team.owner, team.teamTotalPoints, team.teamActualTotal, team.playersInfo),
+        );
+        // Use replaceChildren for efficient DOM clearing and appending
+        resultsDiv.innerHTML = teamCards.join('');
 
-        // --- NEW: Render Eliminated Teams ---
+        // Render Eliminated Teams
         if (eliminatedTeams.length > 0) {
           eliminatedSection.classList.remove('hidden');
-          eliminatedList.innerHTML = ''; // Clear any previous entries
+          const elimCards = eliminatedTeams.toSorted((a, b) => a.teamName.localeCompare(b.teamName)).map(createEliminatedTeamCardHTML);
 
-          // Sort eliminated teams alphabetically by team name
-          eliminatedTeams.sort((a, b) => a.teamName.localeCompare(b.teamName));
-
-          for (const owner of eliminatedTeams) {
-            createEliminatedTeamCard(owner);
-          }
+          eliminatedList.innerHTML = elimCards.join('');
         }
       }
 
-      // --- New Optimal Score Calculator ---
-      /**
-       * Calculates the optimal "best ball" score based on a fixed roster:
-       * 1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX (RB/WR/TE)
-       * @param {Array} allPlayersOnRoster - List of players
-       * @param {String} scoreKey - The property to use for scoring ('points' or 'actualPoints')
-       */
       function calculateOptimalScore(allPlayersOnRoster, scoreKey = 'points') {
-        // Helper to sort by the specific key
         const sortByScore = (a, b) => b[scoreKey] - a[scoreKey];
 
-        const qbs = allPlayersOnRoster.filter((p) => p.position === 'QB').sort(sortByScore);
-        const rbs = allPlayersOnRoster.filter((p) => p.position === 'RB').sort(sortByScore);
-        const wrs = allPlayersOnRoster.filter((p) => p.position === 'WR').sort(sortByScore);
-        const tes = allPlayersOnRoster.filter((p) => p.position === 'TE').sort(sortByScore);
+        // Use toSorted (ES2023) to avoid mutating the filtered arrays
+        const qbs = allPlayersOnRoster.filter((p) => p.position === 'QB').toSorted(sortByScore);
+        const rbs = allPlayersOnRoster.filter((p) => p.position === 'RB').toSorted(sortByScore);
+        const wrs = allPlayersOnRoster.filter((p) => p.position === 'WR').toSorted(sortByScore);
+        const tes = allPlayersOnRoster.filter((p) => p.position === 'TE').toSorted(sortByScore);
 
         let totalScore = 0;
         const optimalStarterIds = new Set();
-        const orderedStarters = []; // Array to hold starters in order
+        const orderedStarters = [];
 
-        // Helper to add a player to the optimal lineup
         const addPlayer = (player) => {
           if (player) {
-            // Use playerId to track, as it's the unique identifier
             optimalStarterIds.add(player.playerId);
             totalScore += player[scoreKey];
-            orderedStarters.push(player); // Add the full player object
+            orderedStarters.push(player);
           }
         };
 
-        // 1 QB
+        // Roster Construction: 1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX
         addPlayer(qbs[0]);
-        // 2 RB
         addPlayer(rbs[0]);
         addPlayer(rbs[1]);
-        // 2 WR
         addPlayer(wrs[0]);
         addPlayer(wrs[1]);
-        // 1 TE
         addPlayer(tes[0]);
 
-        // 2 FLEX (RB/WR/TE)
-        // Create a pool of all RBs, WRs, and TEs who haven't been used yet
-        const flexPool = [...rbs, ...wrs, ...tes]
-          .filter((p) => p && !optimalStarterIds.has(p.playerId)) // Check for 'p' in case a position had 0 players
-          .sort(sortByScore);
+        // Flex Pool: Remaining RBs, WRs, TEs
+        const flexPool = [...rbs, ...wrs, ...tes].filter((p) => !optimalStarterIds.has(p.playerId)).toSorted(sortByScore);
 
         addPlayer(flexPool[0]);
         addPlayer(flexPool[1]);
 
-        return { totalScore, optimalStarters: optimalStarterIds, orderedStarters: orderedStarters };
+        return { totalScore, optimalStarters: optimalStarterIds, orderedStarters };
       }
 
-      // --- UI Helper Functions ---
-
-      function createTeamCard(owner, totalProjected, totalActual, players) {
-        const card = document.createElement('div');
-        card.className = 'bg-white shadow-lg rounded-lg p-4 overflow-hidden';
-
-        // If totals match (to 2 decimals as displayed) AND no games are in progress, show a single large green check icon
+      // Generate HTML string instead of DOM nodes for performance with innerHTML
+      function createTeamCardHTML(owner, totalProjected, totalActual, players) {
+        // Check for perfect match (Projected == Actual) with no active games
         const totalsMatch = totalProjected.toFixed(2) === totalActual.toFixed(2);
         const anyGameInProgress = players.some((p) => p.gameStatus === 'inprogress');
-        const singleCheckIconHtml =
+
+        const checkIcon =
           totalsMatch && !anyGameInProgress
-            ? `
-            <span class="ml-3 inline-flex items-center text-green-600" title="Projected equals Actual" role="img" aria-label="Projected equals Actual">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
-                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 7.22a.75.75 0 00-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 10-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l5.25-5.25z" clip-rule="evenodd" />
-              </svg>
-            </span>
-          `
+            ? `<span class="ml-3 inline-flex items-center text-green-600" title="Finalized">
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+                 <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 7.22a.75.75 0 00-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 10-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l5.25-5.25z" clip-rule="evenodd" />
+               </svg>
+             </span>`
             : '';
 
-        const playersHtml = players
+        const playersList = players
           .map((p) => {
-            // Build player info display string with proper spacing
-            const parts = [p.name];
-            if (p.playerTeam) parts.push(p.playerTeam);
-            if (p.opponent) parts.push(p.opponent);
-            const playerInfo = parts.join(' ');
-
-            // Add "In Progress" indicator if game is in progress
             const inProgressBadge = p.gameStatus === 'inprogress' ? '🚧' : '';
             const injuryBadge = p.injuryStatus === 'Out' ? '🤕' : '';
-            const zeroProjectionClass = p.projectedPoints === 0 ? 'text-red-600 font-bold' : 'text-gray-500';
+            const zeroProjClass = p.projectedPoints === 0 ? 'text-red-600 font-bold' : 'text-gray-500';
+            const rowClass = p.isStarter ? 'font-semibold text-gray-900' : 'text-gray-500';
+            const scoreClass = p.isStarter ? 'text-black' : 'text-gray-500';
 
             return `
-                <li class="flex justify-between items-center py-2 ${p.isStarter ? 'font-semibold' : 'text-gray-500'}">
-                    <span class="truncate" title="${p.name}">
-                        ${playerInfo}
-                        <span class="text-xs uppercase text-gray-400 ml-1">${p.position}</span>
-                        ${inProgressBadge}
-                        ${injuryBadge}
-                    </span>
-                    <span class="flex-shrink-0 text-right">
-                        <span class="${p.isStarter ? 'text-black' : 'text-gray-500'}">${p.actualPoints.toFixed(2)}</span>
-                        <span class="italic font-normal ${zeroProjectionClass} ml-1">(${p.projectedPoints.toFixed(2)})</span>
-                    </span>
-                </li>
-            `;
+              <li class="flex justify-between items-center py-2 ${rowClass}">
+                <span class="truncate" title="${p.name}">
+                  ${p.name} <span class="text-xs uppercase text-gray-400 ml-1">${p.playerTeam || ''} ${p.opponent}</span>
+                  <span class="text-xs text-gray-400 ml-1">${p.position}</span>
+                  ${inProgressBadge} ${injuryBadge}
+                </span>
+                <span class="flex-shrink-0 text-right">
+                  <span class="${scoreClass}">${numberFormatter.format(p.actualPoints)}</span>
+                  <span class="italic font-normal ${zeroProjClass} ml-1">(${numberFormatter.format(p.projectedPoints)})</span>
+                </span>
+              </li>`;
           })
           .join('');
 
-        card.innerHTML = `
-                <div class="border-b border-gray-200 pb-3 mb-3">
-                    <h3 class="text-xl font-bold truncate" title="${owner.teamName}">${owner.teamName}</h3>
-                    <div class="mt-2 flex items-center justify-between">
-                      <div class="flex space-x-6">
-                        <div>
-                          <p class="text-2xl font-bold text-blue-600">
-                            ${totalProjected.toFixed(2)}
-                          </p>
-                          <p class="text-xs text-gray-500 uppercase tracking-wide">Projected</p>
-                        </div>
-                        <div>
-                          <p class="text-2xl font-bold text-gray-800">
-                            ${totalActual.toFixed(2)}
-                          </p>
-                          <p class="text-xs text-gray-500 uppercase tracking-wide">Actual</p>
-                        </div>
-                      </div>
-                      ${singleCheckIconHtml}
-                    </div>
+        return `
+          <div class="bg-white shadow-lg rounded-lg p-4 overflow-hidden">
+            <div class="border-b border-gray-200 pb-3 mb-3">
+              <h3 class="text-xl font-bold truncate" title="${owner.teamName}">${owner.teamName}</h3>
+              <div class="mt-2 flex items-center justify-between">
+                <div class="flex space-x-6">
+                  <div>
+                    <p class="text-2xl font-bold text-blue-600">${numberFormatter.format(totalProjected)}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Projected</p>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-bold text-gray-800">${numberFormatter.format(totalActual)}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Actual</p>
+                  </div>
                 </div>
-                <ul class="divide-y divide-gray-200">
-                    ${playersHtml}
-                </ul>
-            `;
-        resultsDiv.appendChild(card);
+                ${checkIcon}
+              </div>
+            </div>
+            <ul class="divide-y divide-gray-200">${playersList}</ul>
+          </div>`;
       }
 
-      function createEliminatedTeamCard(owner) {
-        const card = document.createElement('div');
-        card.className = 'bg-white shadow-lg rounded-lg p-4';
-        card.innerHTML = `
-                <h3 class="text-xl font-bold truncate text-gray-500" title="${owner.teamName}">${owner.teamName}</h3>
-            `;
-        eliminatedList.appendChild(card);
+      function createEliminatedTeamCardHTML(owner) {
+        return `
+          <div class="bg-white shadow-lg rounded-lg p-4">
+            <h3 class="text-xl font-bold truncate text-gray-500" title="${owner.teamName}">${owner.teamName}</h3>
+          </div>`;
       }
 
       function getScoringKey(settings) {
-        // Handle cases where settings might be null or undefined
-        if (!settings) {
-          return 'pts_std'; // Default to standard
-        }
-        const recPoints = settings.rec || 0;
-        if (recPoints === 1) return 'pts_ppr';
-        if (recPoints === 0.5) return 'pts_half_ppr';
+        const rec = settings?.rec ?? 0;
+        if (rec === 1) return 'pts_ppr';
+        if (rec === 0.5) return 'pts_half_ppr';
         return 'pts_std';
       }
 
@@ -585,11 +486,9 @@
           messageArea.classList.remove('hidden');
           messageText.textContent = message;
           fetchButton.disabled = true;
-          fetchButton.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
           messageArea.classList.add('hidden');
           fetchButton.disabled = false;
-          fetchButton.classList.remove('opacity-50', 'cursor-not-allowed');
         }
       }
 
@@ -597,27 +496,24 @@
         messageText.textContent = message;
         messageText.className = isError ? 'text-lg font-medium text-red-600' : 'text-lg font-medium text-gray-700';
         messageArea.classList.remove('hidden');
-        // Hide spinner if it's just a message
-        messageArea.querySelector('.spinner').classList.add('hidden');
+        messageArea.querySelector('.spinner')?.classList.add('hidden');
       }
 
       function clearResults() {
-        resultsDiv.innerHTML = '';
-        eliminatedList.innerHTML = ''; // Clear eliminated list
-        eliminatedSection.classList.add('hidden'); // Hide eliminated section
+        resultsDiv.replaceChildren(); // Modern clear
+        eliminatedList.replaceChildren();
+        eliminatedSection.classList.add('hidden');
         leagueInfoDiv.classList.add('hidden');
         leagueNameEl.textContent = '';
         leagueDetailsEl.textContent = '';
-        // Ensure spinner is visible when clearing for a new load
-        messageArea.querySelector('.spinner').classList.remove('hidden');
+        messageArea.querySelector('.spinner')?.classList.remove('hidden');
       }
     </script>
 
-    <!-- GitHub Link -->
     <div class="text-center py-8">
       <a
         href="https://github.com/mrbusche/sleeper-guillotine"
-        class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition duration-150 ease-in-out"
+        class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition"
         target="_blank"
       >
         Contribute on GitHub
