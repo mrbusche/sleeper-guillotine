@@ -367,14 +367,19 @@
 
           // --- NEW OPTIMAL SCORE CALCULATION ---
           // Calculate optimal score based on 1QB, 2RB, 2WR, 1TE, 2FLEX (RB/WR/TE)
-          const {
-            totalPoints: teamProjectedTotal,
-            totalActualPoints: teamActualTotal,
-            optimalStarters,
-            orderedStarters,
-          } = calculateOptimalScore(playersInfo);
 
-          // Update the isStarter flag for UI highlighting based on the optimal lineup
+          // 1. Calculate Projected Best Ball (determines starters for UI)
+          const projectedOutcome = calculateOptimalScore(playersInfo, 'points');
+          const teamProjectedTotal = projectedOutcome.totalScore;
+          const optimalStarters = projectedOutcome.optimalStarters;
+          const orderedStarters = projectedOutcome.orderedStarters;
+
+          // 2. Calculate Actual Best Ball (determines "Actual" score displayed)
+          // This finds the best possible score using only actual points scored so far
+          const actualOutcome = calculateOptimalScore(playersInfo, 'actualPoints');
+          const teamActualTotal = actualOutcome.totalScore;
+
+          // Update the isStarter flag for UI highlighting based on the optimal lineup (Projected)
           // We still use the Set for a quick lookup
           for (const p of playersInfo) {
             if (optimalStarters.has(p.playerId)) {
@@ -428,25 +433,28 @@
       /**
        * Calculates the optimal "best ball" score based on a fixed roster:
        * 1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX (RB/WR/TE)
+       * @param {Array} allPlayersOnRoster - List of players
+       * @param {String} scoreKey - The property to use for scoring ('points' or 'actualPoints')
        */
-      function calculateOptimalScore(allPlayersOnRoster) {
-        const qbs = allPlayersOnRoster.filter((p) => p.position === 'QB').sort((a, b) => b.points - a.points);
-        const rbs = allPlayersOnRoster.filter((p) => p.position === 'RB').sort((a, b) => b.points - a.points);
-        const wrs = allPlayersOnRoster.filter((p) => p.position === 'WR').sort((a, b) => b.points - a.points);
-        const tes = allPlayersOnRoster.filter((p) => p.position === 'TE').sort((a, b) => b.points - a.points);
+      function calculateOptimalScore(allPlayersOnRoster, scoreKey = 'points') {
+        // Helper to sort by the specific key
+        const sortByScore = (a, b) => b[scoreKey] - a[scoreKey];
 
-        let totalPoints = 0;
-        let totalActualPoints = 0; // NEW: For tracking pure actual points
+        const qbs = allPlayersOnRoster.filter((p) => p.position === 'QB').sort(sortByScore);
+        const rbs = allPlayersOnRoster.filter((p) => p.position === 'RB').sort(sortByScore);
+        const wrs = allPlayersOnRoster.filter((p) => p.position === 'WR').sort(sortByScore);
+        const tes = allPlayersOnRoster.filter((p) => p.position === 'TE').sort(sortByScore);
+
+        let totalScore = 0;
         const optimalStarterIds = new Set();
-        const orderedStarters = []; // NEW: Array to hold starters in order
+        const orderedStarters = []; // Array to hold starters in order
 
         // Helper to add a player to the optimal lineup
         const addPlayer = (player) => {
           if (player) {
             // Use playerId to track, as it's the unique identifier
             optimalStarterIds.add(player.playerId);
-            totalPoints += player.actualPoints > 0 ? player.actualPoints : player.points; // This is the mixed (display) total
-            totalActualPoints += player.actualPoints; // This is the pure actual total
+            totalScore += player[scoreKey];
             orderedStarters.push(player); // Add the full player object
           }
         };
@@ -466,12 +474,12 @@
         // Create a pool of all RBs, WRs, and TEs who haven't been used yet
         const flexPool = [...rbs, ...wrs, ...tes]
           .filter((p) => p && !optimalStarterIds.has(p.playerId)) // Check for 'p' in case a position had 0 players
-          .sort((a, b) => b.points - a.points);
+          .sort(sortByScore);
 
         addPlayer(flexPool[0]);
         addPlayer(flexPool[1]);
 
-        return { totalPoints, totalActualPoints, optimalStarters: optimalStarterIds, orderedStarters: orderedStarters };
+        return { totalScore, optimalStarters: optimalStarterIds, orderedStarters: orderedStarters };
       }
 
       // --- UI Helper Functions ---
@@ -528,15 +536,19 @@
                 <div class="border-b border-gray-200 pb-3 mb-3">
                     <h3 class="text-xl font-bold truncate" title="${owner.teamName}">${owner.teamName}</h3>
                     <div class="mt-2 flex items-center justify-between">
-                      <div>
-                        <p class="text-2xl font-bold text-blue-600">
-                          ${totalProjected.toFixed(2)}
-                          <span class="text-base font-normal text-gray-600">Projected Total</span>
-                        </p>
-                        <!--<p class="text-lg font-semibold text-gray-700 mt-1">
-                          ${totalActual.toFixed(2)}
-                          <span class="text-base font-normal text-gray-600">Actual Total</span>
-                        </p>-->
+                      <div class="flex space-x-6">
+                        <div>
+                          <p class="text-2xl font-bold text-blue-600">
+                            ${totalProjected.toFixed(2)}
+                          </p>
+                          <p class="text-xs text-gray-500 uppercase tracking-wide">Projected</p>
+                        </div>
+                        <div>
+                          <p class="text-2xl font-bold text-gray-800">
+                            ${totalActual.toFixed(2)}
+                          </p>
+                          <p class="text-xs text-gray-500 uppercase tracking-wide">Actual</p>
+                        </div>
                       </div>
                       ${singleCheckIconHtml}
                     </div>
