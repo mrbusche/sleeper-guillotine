@@ -134,6 +134,14 @@
       // --- Event Listeners ---
       document.addEventListener('DOMContentLoaded', () => {
         weekInput.value = getCurrentNFLWeek();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const leagueIdParam = urlParams.get('leagueId');
+
+        if (leagueIdParam) {
+          leagueIdInput.value = leagueIdParam;
+          handleFetchData();
+        }
       });
       fetchButton.addEventListener('click', handleFetchData);
 
@@ -146,6 +154,11 @@
           showMessage('Please enter both a League ID and a Week.', true);
           return;
         }
+
+        // Update URL with leagueId
+        const url = new URL(window.location);
+        url.searchParams.set('leagueId', leagueId);
+        window.history.pushState({}, '', url);
 
         // Cancel previous pending requests
         if (abortController) {
