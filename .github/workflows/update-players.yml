@@ -2,7 +2,7 @@ name: Update Players Data
 
 on:
   schedule:
-    - cron: "0 6 * * 2" # Every Tuesday at 06:00 UTC
+    - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
   workflow_dispatch: {}
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: '.nvmrc'
 
       - name: Prune players
         run: node scripts/prune_players.js
