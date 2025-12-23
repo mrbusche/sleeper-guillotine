@@ -2,7 +2,7 @@ name: Update Players Data
 
 on:
   schedule:
-    - cron: "0 6 * * 2" # Every Tuesday at 06:00 UTC
+    - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
   workflow_dispatch: {}
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.x"
+          python-version: '3.x'
 
       - name: Prune players
         run: python scripts/prune_players.py
