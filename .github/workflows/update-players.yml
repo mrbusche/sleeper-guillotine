@@ -13,22 +13,14 @@ jobs:
   update-players:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/setup-python@v6
         with:
-          node-version-file: '.nvmrc'
+          python-version: '3.x'
 
       - name: Prune players
-        run: node scripts/prune_players.js
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Format code
-        run: npm run prettier:fix
+        run: python scripts/prune_players.py
 
       - name: Create Pull Request
         run: |
