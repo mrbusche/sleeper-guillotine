@@ -27,6 +27,9 @@ KEEP = {
     "injury_status",
 }
 
+# Allowed positions
+ALLOWED_POSITIONS = {"QB", "RB", "TE", "WR"}
+
 
 def prune_object(obj):
     """Creates a new dictionary containing only the allowed keys."""
@@ -40,6 +43,13 @@ def prune_object(obj):
             res["player_id"] = obj["playerId"]
 
     return res
+
+
+def should_keep_player(player):
+    """Checks if player has an allowed position and is not Inactive."""
+    position = player.get("position")
+    status = player.get("status")
+    return position in ALLOWED_POSITIONS and status != "Inactive"
 
 
 def main():
@@ -60,7 +70,9 @@ def main():
         pruned_data = None
 
         if isinstance(data, list):
-            pruned_data = [prune_object(item) for item in data]
+            pruned_data = [
+                prune_object(item) for item in data if should_keep_player(item)
+            ]
 
         elif isinstance(data, dict):
             # Handle map of id -> player (Sleeper API usually returns this)
@@ -68,11 +80,12 @@ def main():
             if data and isinstance(next(iter(data.values())), dict):
                 pruned_data = {}
                 for k, v in data.items():
-                    pruned_item = prune_object(v)
-                    # Keep key as player_id if missing
-                    if "player_id" not in pruned_item:
-                        pruned_item["player_id"] = k
-                    pruned_data[k] = pruned_item
+                    if should_keep_player(v):
+                        pruned_item = prune_object(v)
+                        # Keep key as player_id if missing
+                        if "player_id" not in pruned_item:
+                            pruned_item["player_id"] = k
+                        pruned_data[k] = pruned_item
             else:
                 # Single object
                 pruned_data = prune_object(data)
