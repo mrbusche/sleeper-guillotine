@@ -46,10 +46,11 @@ def prune_object(obj):
 
 
 def should_keep_player(player):
-    """Checks if player has an allowed position and is not Inactive."""
+    """Checks if player has an allowed position and is not Inactive or without a team."""
     position = player.get("position")
     status = player.get("status")
-    return position in ALLOWED_POSITIONS and status != "Inactive"
+    team = player.get("team")
+    return position in ALLOWED_POSITIONS and status != "Inactive" and team is not None
 
 
 def main():
