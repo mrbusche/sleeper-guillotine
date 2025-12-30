@@ -7,7 +7,6 @@ from urllib.error import URLError
 # Setup paths relative to this script
 # Equivalent to: join(__dirname, '..', 'public', '...')
 BASE_DIR = Path(__file__).resolve().parent.parent / "public"
-SRC_FILE = BASE_DIR / "players.json"
 OUT_FILE = BASE_DIR / "players_pruned.json"
 
 # Ensure directory exists
@@ -61,13 +60,7 @@ def main():
         with urlopen(Request("https://api.sleeper.app/v1/players/nfl")) as response:
             data = json.loads(response.read().decode())
 
-        # 1. Write Raw Data
-        # sort_keys=True ensures consistent ordering for diffs
-        with open(SRC_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, sort_keys=True)
-        print(f"Raw players written to {SRC_FILE}")
-
-        # 2. Prune Data
+        # Prune Data (keep in-memory, no raw file on disk)
         pruned_data = None
 
         if isinstance(data, list):
