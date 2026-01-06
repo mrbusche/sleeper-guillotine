@@ -96,7 +96,7 @@
     ],
     "first_name": "Chris",
     "full_name": "Chris Rodriguez",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Rodriguez",
     "player_id": "10219",
     "position": "RB",
@@ -109,7 +109,7 @@
     ],
     "first_name": "Will",
     "full_name": "Will Mallory",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Mallory",
     "player_id": "10220",
     "position": "TE",
@@ -213,7 +213,7 @@
     ],
     "first_name": "Charlie",
     "full_name": "Charlie Jones",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Jones",
     "player_id": "10228",
     "position": "WR",
@@ -252,7 +252,7 @@
     ],
     "first_name": "Derius",
     "full_name": "Derius Davis",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Davis",
     "player_id": "10234",
     "position": "WR",
@@ -265,7 +265,7 @@
     ],
     "first_name": "Dalton",
     "full_name": "Dalton Kincaid",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Kincaid",
     "player_id": "10236",
     "position": "TE",
@@ -291,7 +291,7 @@
     ],
     "first_name": "Stetson",
     "full_name": "Stetson Bennett",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Bennett",
     "player_id": "10857",
     "position": "QB",
@@ -330,7 +330,7 @@
     ],
     "first_name": "Aidan",
     "full_name": "Aidan O'Connell",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "O'Connell",
     "player_id": "10866",
     "position": "QB",
@@ -460,7 +460,7 @@
     ],
     "first_name": "Joel",
     "full_name": "Joel Wilson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Wilson",
     "player_id": "11113",
     "position": "TE",
@@ -551,7 +551,7 @@
     ],
     "first_name": "Malik",
     "full_name": "Malik Heath",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Heath",
     "player_id": "11210",
     "position": "WR",
@@ -629,7 +629,7 @@
     ],
     "first_name": "Tommy",
     "full_name": "Tommy DeVito",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "DeVito",
     "player_id": "11292",
     "position": "QB",
@@ -785,7 +785,7 @@
     ],
     "first_name": "Nate",
     "full_name": "Nate Adkins",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Adkins",
     "player_id": "11433",
     "position": "TE",
@@ -876,7 +876,7 @@
     ],
     "first_name": "Sam",
     "full_name": "Sam Hartman",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Hartman",
     "player_id": "11558",
     "position": "QB",
@@ -902,7 +902,7 @@
     ],
     "first_name": "Spencer",
     "full_name": "Spencer Rattler",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Rattler",
     "player_id": "11562",
     "position": "QB",
@@ -941,7 +941,7 @@
     ],
     "first_name": "J.J.",
     "full_name": "J.J. McCarthy",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "McCarthy",
     "player_id": "11565",
     "position": "QB",
@@ -954,7 +954,7 @@
     ],
     "first_name": "Jayden",
     "full_name": "Jayden Daniels",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Daniels",
     "player_id": "11566",
     "position": "QB",
@@ -967,7 +967,7 @@
     ],
     "first_name": "Blake",
     "full_name": "Blake Watson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Watson",
     "player_id": "11568",
     "position": "RB",
@@ -980,7 +980,7 @@
     ],
     "first_name": "Jarquez",
     "full_name": "Jarquez Hunter",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Hunter",
     "player_id": "11569",
     "position": "RB",
@@ -999,19 +999,6 @@
     "position": "RB",
     "status": "Active",
     "team": "BAL"
-  },
-  "11571": {
-    "fantasy_positions": [
-      "RB"
-    ],
-    "first_name": "Isaiah",
-    "full_name": "Isaiah Davis",
-    "injury_status": "Questionable",
-    "last_name": "Davis",
-    "player_id": "11571",
-    "position": "RB",
-    "status": "Active",
-    "team": "NYJ"
   },
   "11573": {
     "fantasy_positions": [
@@ -1123,7 +1110,7 @@
     ],
     "first_name": "Blake",
     "full_name": "Blake Corum",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Corum",
     "player_id": "11586",
     "position": "RB",
@@ -1136,7 +1123,7 @@
     ],
     "first_name": "Jawhar",
     "full_name": "Jawhar Jordan",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Jordan",
     "player_id": "11588",
     "position": "RB",
@@ -1201,7 +1188,7 @@
     ],
     "first_name": "Theo",
     "full_name": "Theo Johnson",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Johnson",
     "player_id": "11597",
     "position": "TE",
@@ -1234,19 +1221,6 @@
     "status": "Active",
     "team": "HOU"
   },
-  "11600": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Ja'Tavion",
-    "full_name": "Ja'Tavion Sanders",
-    "injury_status": "Out",
-    "last_name": "Sanders",
-    "player_id": "11600",
-    "position": "TE",
-    "status": "Active",
-    "team": "CAR"
-  },
   "11603": {
     "fantasy_positions": [
       "TE"
@@ -1259,6 +1233,19 @@
     "position": "TE",
     "status": "Active",
     "team": "SEA"
+  },
+  "11605": {
+    "fantasy_positions": [
+      "TE"
+    ],
+    "first_name": "Jaheim",
+    "full_name": "Jaheim Bell",
+    "injury_status": null,
+    "last_name": "Bell",
+    "player_id": "11605",
+    "position": "TE",
+    "status": "Active",
+    "team": "PIT"
   },
   "11608": {
     "fantasy_positions": [
@@ -1279,7 +1266,7 @@
     ],
     "first_name": "Malik",
     "full_name": "Malik Washington",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Washington",
     "player_id": "11610",
     "position": "WR",
@@ -1331,7 +1318,7 @@
     ],
     "first_name": "Rome",
     "full_name": "Rome Odunze",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Odunze",
     "player_id": "11620",
     "position": "WR",
@@ -1357,7 +1344,7 @@
     ],
     "first_name": "Jordan",
     "full_name": "Jordan Whittington",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Whittington",
     "player_id": "11623",
     "position": "WR",
@@ -1370,7 +1357,7 @@
     ],
     "first_name": "Xavier",
     "full_name": "Xavier Worthy",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Worthy",
     "player_id": "11624",
     "position": "WR",
@@ -1415,19 +1402,6 @@
     "position": "WR",
     "status": "Active",
     "team": "DEN"
-  },
-  "11628": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Marvin",
-    "full_name": "Marvin Harrison",
-    "injury_status": "Questionable",
-    "last_name": "Harrison",
-    "player_id": "11628",
-    "position": "WR",
-    "status": "Active",
-    "team": "ARI"
   },
   "11629": {
     "fantasy_positions": [
@@ -1474,7 +1448,7 @@
     ],
     "first_name": "Jamari",
     "full_name": "Jamari Thrash",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Thrash",
     "player_id": "11633",
     "position": "WR",
@@ -1500,7 +1474,7 @@
     ],
     "first_name": "Keon",
     "full_name": "Keon Coleman",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Coleman",
     "player_id": "11637",
     "position": "WR",
@@ -1513,7 +1487,7 @@
     ],
     "first_name": "Ricky",
     "full_name": "Ricky Pearsall",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Pearsall",
     "player_id": "11638",
     "position": "WR",
@@ -1578,7 +1552,7 @@
     ],
     "first_name": "Kimani",
     "full_name": "Kimani Vidal",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Vidal",
     "player_id": "11647",
     "position": "RB",
@@ -1617,7 +1591,7 @@
     ],
     "first_name": "Isaac",
     "full_name": "Isaac Guerendo",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Guerendo",
     "player_id": "11651",
     "position": "RB",
@@ -1630,7 +1604,7 @@
     ],
     "first_name": "Dante",
     "full_name": "Dante Miller",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Miller",
     "player_id": "11654",
     "position": "RB",
@@ -1695,7 +1669,7 @@
     ],
     "first_name": "Ryan",
     "full_name": "Ryan Flournoy",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Flournoy",
     "player_id": "11783",
     "position": "WR",
@@ -1721,7 +1695,7 @@
     ],
     "first_name": "Casey",
     "full_name": "Casey Washington",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Washington",
     "player_id": "11806",
     "position": "WR",
@@ -1793,19 +1767,6 @@
     "status": "Active",
     "team": "PIT"
   },
-  "11895": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Mason",
-    "full_name": "Mason Tipton",
-    "injury_status": "Out",
-    "last_name": "Tipton",
-    "player_id": "11895",
-    "position": "WR",
-    "status": "Active",
-    "team": "NO"
-  },
   "11911": {
     "fantasy_positions": [
       "WR"
@@ -1858,18 +1819,18 @@
     "status": "Active",
     "team": "WAS"
   },
-  "11943": {
+  "11959": {
     "fantasy_positions": [
-      "RB"
+      "WR"
     ],
-    "first_name": "Michael",
-    "full_name": "Michael Wiley",
+    "first_name": "Bryce",
+    "full_name": "Bryce Oliver",
     "injury_status": null,
-    "last_name": "Wiley",
-    "player_id": "11943",
-    "position": "RB",
+    "last_name": "Oliver",
+    "player_id": "11959",
+    "position": "WR",
     "status": "Active",
-    "team": "TB"
+    "team": "TEN"
   },
   "11963": {
     "fantasy_positions": [
@@ -1877,7 +1838,7 @@
     ],
     "first_name": "Chris",
     "full_name": "Chris Collier",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Collier",
     "player_id": "11963",
     "position": "RB",
@@ -1929,7 +1890,7 @@
     ],
     "first_name": "Cam",
     "full_name": "Cam Grandy",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Grandy",
     "player_id": "12062",
     "position": "TE",
@@ -1942,7 +1903,7 @@
     ],
     "first_name": "McCallan",
     "full_name": "McCallan Castles",
-    "injury_status": null,
+    "injury_status": "Out",
     "last_name": "Castles",
     "player_id": "12070",
     "position": "TE",
@@ -1974,19 +1935,6 @@
     "position": "TE",
     "status": "Active",
     "team": "LAC"
-  },
-  "12154": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Messiah",
-    "full_name": "Messiah Swinson",
-    "injury_status": null,
-    "last_name": "Swinson",
-    "player_id": "12154",
-    "position": "TE",
-    "status": "Active",
-    "team": "ARI"
   },
   "12171": {
     "fantasy_positions": [
@@ -2020,7 +1968,7 @@
     ],
     "first_name": "Russell",
     "full_name": "Russell Wilson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Wilson",
     "player_id": "1234",
     "position": "QB",
@@ -2111,12 +2059,25 @@
     ],
     "first_name": "Jaydon",
     "full_name": "Jaydon Blue",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Blue",
     "player_id": "12457",
     "position": "RB",
     "status": "Active",
     "team": "DAL"
+  },
+  "12462": {
+    "fantasy_positions": [
+      "RB"
+    ],
+    "first_name": "Damien",
+    "full_name": "Damien Martinez",
+    "injury_status": null,
+    "last_name": "Martinez",
+    "player_id": "12462",
+    "position": "RB",
+    "status": "Active",
+    "team": "GB"
   },
   "12467": {
     "fantasy_positions": [
@@ -2261,26 +2222,13 @@
     "status": "Active",
     "team": "NO"
   },
-  "12482": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Savion",
-    "full_name": "Savion Williams",
-    "injury_status": "Out",
-    "last_name": "Williams",
-    "player_id": "12482",
-    "position": "WR",
-    "status": "Active",
-    "team": "GB"
-  },
   "12483": {
     "fantasy_positions": [
       "WR"
     ],
     "first_name": "Jack",
     "full_name": "Jack Bech",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Bech",
     "player_id": "12483",
     "position": "WR",
@@ -2319,7 +2267,7 @@
     ],
     "first_name": "Dillon",
     "full_name": "Dillon Gabriel",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Gabriel",
     "player_id": "12486",
     "position": "QB",
@@ -2332,7 +2280,7 @@
     ],
     "first_name": "Terrance",
     "full_name": "Terrance Ferguson",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Ferguson",
     "player_id": "12487",
     "position": "TE",
@@ -2358,7 +2306,7 @@
     ],
     "first_name": "Bhayshul",
     "full_name": "Bhayshul Tuten",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Tuten",
     "player_id": "12490",
     "position": "RB",
@@ -2384,7 +2332,7 @@
     ],
     "first_name": "Pat",
     "full_name": "Pat Bryant",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Bryant",
     "player_id": "12492",
     "position": "WR",
@@ -2443,19 +2391,6 @@
     "status": "Active",
     "team": "MIN"
   },
-  "12498": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Mason",
-    "full_name": "Mason Taylor",
-    "injury_status": "Out",
-    "last_name": "Taylor",
-    "player_id": "12498",
-    "position": "TE",
-    "status": "Active",
-    "team": "NYJ"
-  },
   "12499": {
     "fantasy_positions": [
       "WR"
@@ -2475,7 +2410,7 @@
     ],
     "first_name": "Quinn",
     "full_name": "Quinn Ewers",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Ewers",
     "player_id": "12500",
     "position": "QB",
@@ -2501,7 +2436,7 @@
     ],
     "first_name": "Gunnar",
     "full_name": "Gunnar Helm",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Helm",
     "player_id": "12502",
     "position": "TE",
@@ -2527,7 +2462,7 @@
     ],
     "first_name": "Kaleb",
     "full_name": "Kaleb Johnson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Johnson",
     "player_id": "12504",
     "position": "RB",
@@ -2553,7 +2488,7 @@
     ],
     "first_name": "Harold",
     "full_name": "Harold Fannin",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Fannin",
     "player_id": "12506",
     "position": "TE",
@@ -2566,7 +2501,7 @@
     ],
     "first_name": "Omarion",
     "full_name": "Omarion Hampton",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Hampton",
     "player_id": "12507",
     "position": "RB",
@@ -2605,7 +2540,7 @@
     ],
     "first_name": "Jalen",
     "full_name": "Jalen Milroe",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Milroe",
     "player_id": "12510",
     "position": "QB",
@@ -2618,7 +2553,7 @@
     ],
     "first_name": "Will",
     "full_name": "Will Howard",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Howard",
     "player_id": "12511",
     "position": "QB",
@@ -2649,7 +2584,7 @@
     "player_id": "12515",
     "position": "RB",
     "status": "Active",
-    "team": "WAS"
+    "team": "MIA"
   },
   "12516": {
     "fantasy_positions": [
@@ -2696,7 +2631,7 @@
     ],
     "first_name": "Luther",
     "full_name": "Luther Burden",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Burden",
     "player_id": "12519",
     "position": "WR",
@@ -2722,7 +2657,7 @@
     ],
     "first_name": "Cam",
     "full_name": "Cam Ward",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Ward",
     "player_id": "12522",
     "position": "QB",
@@ -2813,7 +2748,7 @@
     ],
     "first_name": "Ja'Corey",
     "full_name": "Ja'Corey Brooks",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Brooks",
     "player_id": "12532",
     "position": "WR",
@@ -2995,7 +2930,7 @@
     ],
     "first_name": "Jordan",
     "full_name": "Jordan Watkins",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Watkins",
     "player_id": "12634",
     "position": "WR",
@@ -3034,7 +2969,7 @@
     ],
     "first_name": "KeAndre",
     "full_name": "KeAndre Lambert-Smith",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Lambert-Smith",
     "player_id": "12670",
     "position": "WR",
@@ -3052,7 +2987,7 @@
     "player_id": "12688",
     "position": "QB",
     "status": "Active",
-    "team": "LV"
+    "team": "MIA"
   },
   "12699": {
     "fantasy_positions": [
@@ -3073,7 +3008,7 @@
     ],
     "first_name": "Graham",
     "full_name": "Graham Mertz",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Mertz",
     "player_id": "12705",
     "position": "QB",
@@ -3112,7 +3047,7 @@
     ],
     "first_name": "Dominic",
     "full_name": "Dominic Lovett",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Lovett",
     "player_id": "12732",
     "position": "WR",
@@ -3131,6 +3066,19 @@
     "position": "TE",
     "status": "Active",
     "team": "DEN"
+  },
+  "12738": {
+    "fantasy_positions": [
+      "RB"
+    ],
+    "first_name": "Phil",
+    "full_name": "Phil Mafah",
+    "injury_status": null,
+    "last_name": "Mafah",
+    "player_id": "12738",
+    "position": "RB",
+    "status": "Active",
+    "team": "DAL"
   },
   "12743": {
     "fantasy_positions": [
@@ -3255,7 +3203,7 @@
     ],
     "first_name": "Connor",
     "full_name": "Connor Bazelak",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Bazelak",
     "player_id": "12776",
     "position": "QB",
@@ -3403,7 +3351,7 @@
     "player_id": "12851",
     "position": "TE",
     "status": "Active",
-    "team": "DAL"
+    "team": "ARI"
   },
   "12860": {
     "fantasy_positions": [
@@ -3411,7 +3359,7 @@
     ],
     "first_name": "Theo",
     "full_name": "Theo Wease",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Wease",
     "player_id": "12860",
     "position": "WR",
@@ -3476,7 +3424,7 @@
     ],
     "first_name": "Nathan",
     "full_name": "Nathan Carter",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Carter",
     "player_id": "12897",
     "position": "RB",
@@ -3515,7 +3463,7 @@
     ],
     "first_name": "Quentin",
     "full_name": "Quentin Skinner",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Skinner",
     "player_id": "12907",
     "position": "WR",
@@ -3743,6 +3691,19 @@
     "status": "Active",
     "team": "LAR"
   },
+  "13032": {
+    "fantasy_positions": [
+      "TE"
+    ],
+    "first_name": "Marshall",
+    "full_name": "Marshall Lang",
+    "injury_status": null,
+    "last_name": "Lang",
+    "player_id": "13032",
+    "position": "TE",
+    "status": "Active",
+    "team": "NE"
+  },
   "13034": {
     "fantasy_positions": [
       "WR"
@@ -3788,7 +3749,7 @@
     ],
     "first_name": "Myles",
     "full_name": "Myles Price",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Price",
     "player_id": "13075",
     "position": "WR",
@@ -3977,6 +3938,19 @@
     "status": "Active",
     "team": "CLE"
   },
+  "13199": {
+    "fantasy_positions": [
+      "WR"
+    ],
+    "first_name": "Montorie",
+    "full_name": "Montorie Foster",
+    "injury_status": null,
+    "last_name": "Foster",
+    "player_id": "13199",
+    "position": "WR",
+    "status": "Active",
+    "team": "SEA"
+  },
   "13202": {
     "fantasy_positions": [
       "WR"
@@ -4022,7 +3996,7 @@
     ],
     "first_name": "Hunter",
     "full_name": "Hunter Dekkers",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Dekkers",
     "player_id": "13217",
     "position": "QB",
@@ -4061,7 +4035,7 @@
     ],
     "first_name": "Geno",
     "full_name": "Geno Smith",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Smith",
     "player_id": "1373",
     "position": "QB",
@@ -4191,7 +4165,7 @@
     ],
     "first_name": "Case",
     "full_name": "Case Keenum",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Keenum",
     "player_id": "1737",
     "position": "QB",
@@ -4256,7 +4230,7 @@
     ],
     "first_name": "Davante",
     "full_name": "Davante Adams",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Adams",
     "player_id": "2133",
     "position": "WR",
@@ -4321,7 +4295,7 @@
     ],
     "first_name": "Marcus",
     "full_name": "Marcus Mariota",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Mariota",
     "player_id": "2307",
     "position": "QB",
@@ -4334,7 +4308,7 @@
     ],
     "first_name": "Phillip",
     "full_name": "Phillip Dorsett",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Dorsett",
     "player_id": "2334",
     "position": "WR",
@@ -4380,19 +4354,6 @@
     "status": "Active",
     "team": "NE"
   },
-  "2505": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Darren",
-    "full_name": "Darren Waller",
-    "injury_status": null,
-    "last_name": "Waller",
-    "player_id": "2505",
-    "position": "TE",
-    "status": "Active",
-    "team": "MIA"
-  },
   "2549": {
     "fantasy_positions": [
       "QB"
@@ -4425,7 +4386,7 @@
     ],
     "first_name": "Raheem",
     "full_name": "Raheem Mostert",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Mostert",
     "player_id": "2749",
     "position": "RB",
@@ -4516,7 +4477,7 @@
     ],
     "first_name": "Sterling",
     "full_name": "Sterling Shepard",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Shepard",
     "player_id": "3200",
     "position": "WR",
@@ -4600,6 +4561,19 @@
     "position": "WR",
     "status": "Active",
     "team": "WAS"
+  },
+  "3271": {
+    "fantasy_positions": [
+      "TE"
+    ],
+    "first_name": "Tyler",
+    "full_name": "Tyler Higbee",
+    "injury_status": null,
+    "last_name": "Higbee",
+    "player_id": "3271",
+    "position": "TE",
+    "status": "Active",
+    "team": "LAR"
   },
   "3286": {
     "fantasy_positions": [
@@ -4789,7 +4763,7 @@
     ],
     "first_name": "David",
     "full_name": "David Njoku",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Njoku",
     "player_id": "4033",
     "position": "TE",
@@ -4815,7 +4789,7 @@
     ],
     "first_name": "Alvin",
     "full_name": "Alvin Kamara",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Kamara",
     "player_id": "4035",
     "position": "RB",
@@ -4971,7 +4945,7 @@
     ],
     "first_name": "Aaron",
     "full_name": "Aaron Jones",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Jones",
     "player_id": "4199",
     "position": "RB",
@@ -4997,7 +4971,7 @@
     ],
     "first_name": "George",
     "full_name": "George Kittle",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Kittle",
     "player_id": "4217",
     "position": "TE",
@@ -5062,7 +5036,7 @@
     ],
     "first_name": "Taysom",
     "full_name": "Taysom Hill",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Hill",
     "player_id": "4381",
     "position": "TE",
@@ -5088,7 +5062,7 @@
     ],
     "first_name": "Pharaoh",
     "full_name": "Pharaoh Brown",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Brown",
     "player_id": "4443",
     "position": "TE",
@@ -5231,7 +5205,7 @@
     ],
     "first_name": "Lamar",
     "full_name": "Lamar Jackson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Jackson",
     "player_id": "4881",
     "position": "QB",
@@ -5400,7 +5374,7 @@
     ],
     "first_name": "Josh",
     "full_name": "Josh Allen",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Allen",
     "player_id": "4984",
     "position": "QB",
@@ -5543,7 +5517,7 @@
     ],
     "first_name": "Dallas",
     "full_name": "Dallas Goedert",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Goedert",
     "player_id": "5022",
     "position": "TE",
@@ -5634,7 +5608,7 @@
     ],
     "first_name": "Braxton",
     "full_name": "Braxton Berrios",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Berrios",
     "player_id": "5121",
     "position": "WR",
@@ -5673,7 +5647,7 @@
     ],
     "first_name": "Tyler",
     "full_name": "Tyler Conklin",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Conklin",
     "player_id": "5133",
     "position": "TE",
@@ -5732,6 +5706,19 @@
     "status": "Active",
     "team": "MIA"
   },
+  "5285": {
+    "fantasy_positions": [
+      "TE"
+    ],
+    "first_name": "Ross",
+    "full_name": "Ross Dwelley",
+    "injury_status": null,
+    "last_name": "Dwelley",
+    "player_id": "5285",
+    "position": "TE",
+    "status": "Active",
+    "team": "CAR"
+  },
   "5347": {
     "fantasy_positions": [
       "RB"
@@ -5751,7 +5738,7 @@
     ],
     "first_name": "Justin",
     "full_name": "Justin Watson",
-    "injury_status": "IR",
+    "injury_status": null,
     "last_name": "Watson",
     "player_id": "5374",
     "position": "WR",
@@ -5829,7 +5816,7 @@
     ],
     "first_name": "T.J.",
     "full_name": "T.J. Hockenson",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Hockenson",
     "player_id": "5844",
     "position": "TE",
@@ -5855,7 +5842,7 @@
     ],
     "first_name": "DK",
     "full_name": "DK Metcalf",
-    "injury_status": "Sus",
+    "injury_status": null,
     "last_name": "Metcalf",
     "player_id": "5846",
     "position": "WR",
@@ -5992,6 +5979,19 @@
     "status": "Active",
     "team": "BUF"
   },
+  "5917": {
+    "fantasy_positions": [
+      "WR"
+    ],
+    "first_name": "Mecole",
+    "full_name": "Mecole Hardman",
+    "injury_status": null,
+    "last_name": "Hardman",
+    "player_id": "5917",
+    "position": "WR",
+    "status": "Active",
+    "team": "BUF"
+  },
   "5927": {
     "fantasy_positions": [
       "WR"
@@ -6037,7 +6037,7 @@
     ],
     "first_name": "Hunter",
     "full_name": "Hunter Renfrow",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Renfrow",
     "player_id": "5955",
     "position": "WR",
@@ -6063,7 +6063,7 @@
     ],
     "first_name": "Josh",
     "full_name": "Josh Oliver",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Oliver",
     "player_id": "5973",
     "position": "TE",
@@ -6115,7 +6115,7 @@
     ],
     "first_name": "Brett",
     "full_name": "Brett Rypien",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Rypien",
     "player_id": "6037",
     "position": "QB",
@@ -6128,7 +6128,7 @@
     ],
     "first_name": "Ty",
     "full_name": "Ty Johnson",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Johnson",
     "player_id": "6039",
     "position": "RB",
@@ -6141,7 +6141,7 @@
     ],
     "first_name": "Jake",
     "full_name": "Jake Browning",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Browning",
     "player_id": "6111",
     "position": "QB",
@@ -6271,7 +6271,7 @@
     ],
     "first_name": "Olamide",
     "full_name": "Olamide Zaccheaus",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Zaccheaus",
     "player_id": "6271",
     "position": "WR",
@@ -6375,7 +6375,7 @@
     ],
     "first_name": "Tom",
     "full_name": "Tom Kennedy",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Kennedy",
     "player_id": "6588",
     "position": "WR",
@@ -6453,7 +6453,7 @@
     ],
     "first_name": "Tua",
     "full_name": "Tua Tagovailoa",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Tagovailoa",
     "player_id": "6768",
     "position": "QB",
@@ -6531,7 +6531,7 @@
     ],
     "first_name": "Justin",
     "full_name": "Justin Herbert",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Herbert",
     "player_id": "6797",
     "position": "QB",
@@ -6570,7 +6570,7 @@
     ],
     "first_name": "Jordan",
     "full_name": "Jordan Love",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Love",
     "player_id": "6804",
     "position": "QB",
@@ -6596,7 +6596,7 @@
     ],
     "first_name": "Michael",
     "full_name": "Michael Pittman",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Pittman",
     "player_id": "6819",
     "position": "WR",
@@ -6635,7 +6635,7 @@
     ],
     "first_name": "A.J.",
     "full_name": "A.J. Dillon",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Dillon",
     "player_id": "6828",
     "position": "RB",
@@ -6680,19 +6680,6 @@
     "position": "TE",
     "status": "Active",
     "team": "HOU"
-  },
-  "6853": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Van",
-    "full_name": "Van Jefferson",
-    "injury_status": "Out",
-    "last_name": "Jefferson",
-    "player_id": "6853",
-    "position": "WR",
-    "status": "Active",
-    "team": "TEN"
   },
   "6865": {
     "fantasy_positions": [
@@ -6901,19 +6888,6 @@
     "position": "RB",
     "status": "Active",
     "team": "CAR"
-  },
-  "7039": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Cody",
-    "full_name": "Cody White",
-    "injury_status": "Questionable",
-    "last_name": "White",
-    "player_id": "7039",
-    "position": "WR",
-    "status": "Active",
-    "team": "SEA"
   },
   "7048": {
     "fantasy_positions": [
@@ -7129,7 +7103,7 @@
     ],
     "first_name": "Nick",
     "full_name": "Nick Westbrook-Ikhine",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Westbrook-Ikhine",
     "player_id": "7496",
     "position": "WR",
@@ -7233,7 +7207,7 @@
     ],
     "first_name": "Hunter",
     "full_name": "Hunter Long",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Long",
     "player_id": "7535",
     "position": "TE",
@@ -7298,7 +7272,7 @@
     ],
     "first_name": "Amon-Ra",
     "full_name": "Amon-Ra St. Brown",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "St. Brown",
     "player_id": "7547",
     "position": "WR",
@@ -7415,7 +7389,7 @@
     ],
     "first_name": "Rashod",
     "full_name": "Rashod Bateman",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Bateman",
     "player_id": "7571",
     "position": "WR",
@@ -7461,19 +7435,6 @@
     "status": "Active",
     "team": "JAX"
   },
-  "7588": {
-    "fantasy_positions": [
-      "RB"
-    ],
-    "first_name": "Javonte",
-    "full_name": "Javonte Williams",
-    "injury_status": "Questionable",
-    "last_name": "Williams",
-    "player_id": "7588",
-    "position": "RB",
-    "status": "Active",
-    "team": "DAL"
-  },
   "7593": {
     "fantasy_positions": [
       "RB"
@@ -7506,7 +7467,7 @@
     ],
     "first_name": "Tylan",
     "full_name": "Tylan Wallace",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Wallace",
     "player_id": "7595",
     "position": "WR",
@@ -7773,19 +7734,6 @@
     "status": "Active",
     "team": "NYG"
   },
-  "7946": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Jack",
-    "full_name": "Jack Stoll",
-    "injury_status": "Questionable",
-    "last_name": "Stoll",
-    "player_id": "7946",
-    "position": "TE",
-    "status": "Active",
-    "team": "NO"
-  },
   "7989": {
     "fantasy_positions": [
       "WR"
@@ -7883,7 +7831,7 @@
     ],
     "first_name": "Nikola",
     "full_name": "Nikola Kalinic",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Kalinic",
     "player_id": "8107",
     "position": "TE",
@@ -7896,7 +7844,7 @@
     ],
     "first_name": "Jake",
     "full_name": "Jake Ferguson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Ferguson",
     "player_id": "8110",
     "position": "TE",
@@ -8000,7 +7948,7 @@
     ],
     "first_name": "Hassan",
     "full_name": "Hassan Haskins",
-    "injury_status": "Questionable",
+    "injury_status": null,
     "last_name": "Haskins",
     "player_id": "8123",
     "position": "RB",
@@ -8013,25 +7961,12 @@
     ],
     "first_name": "Calvin",
     "full_name": "Calvin Austin",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Austin",
     "player_id": "8125",
     "position": "WR",
     "status": "Active",
     "team": "PIT"
-  },
-  "8126": {
-    "fantasy_positions": [
-      "WR"
-    ],
-    "first_name": "Wan'Dale",
-    "full_name": "Wan'Dale Robinson",
-    "injury_status": null,
-    "last_name": "Robinson",
-    "player_id": "8126",
-    "position": "WR",
-    "status": "Active",
-    "team": "NYG"
   },
   "8127": {
     "fantasy_positions": [
@@ -8052,7 +7987,7 @@
     ],
     "first_name": "Dameon",
     "full_name": "Dameon Pierce",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Pierce",
     "player_id": "8129",
     "position": "RB",
@@ -8195,7 +8130,7 @@
     ],
     "first_name": "Chris",
     "full_name": "Chris Olave",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Olave",
     "player_id": "8144",
     "position": "WR",
@@ -8306,6 +8241,19 @@
     "status": "Active",
     "team": "CLE"
   },
+  "8159": {
+    "fantasy_positions": [
+      "QB"
+    ],
+    "first_name": "Desmond",
+    "full_name": "Desmond Ridder",
+    "injury_status": null,
+    "last_name": "Ridder",
+    "player_id": "8159",
+    "position": "QB",
+    "status": "Active",
+    "team": "GB"
+  },
   "8160": {
     "fantasy_positions": [
       "QB"
@@ -8338,7 +8286,7 @@
     ],
     "first_name": "Sam",
     "full_name": "Sam Howell",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Howell",
     "player_id": "8162",
     "position": "QB",
@@ -8377,7 +8325,7 @@
     ],
     "first_name": "James",
     "full_name": "James Mitchell",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Mitchell",
     "player_id": "8170",
     "position": "TE",
@@ -8416,7 +8364,7 @@
     ],
     "first_name": "Grant",
     "full_name": "Grant Calcaterra",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Calcaterra",
     "player_id": "8177",
     "position": "TE",
@@ -8462,19 +8410,6 @@
     "status": "Active",
     "team": "SF"
   },
-  "8194": {
-    "fantasy_positions": [
-      "RB"
-    ],
-    "first_name": "Jashaun",
-    "full_name": "Jashaun Corbin",
-    "injury_status": null,
-    "last_name": "Corbin",
-    "player_id": "8194",
-    "position": "RB",
-    "status": "Active",
-    "team": "NE"
-  },
   "8195": {
     "fantasy_positions": [
       "RB"
@@ -8507,7 +8442,7 @@
     ],
     "first_name": "Bo",
     "full_name": "Bo Melton",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Melton",
     "player_id": "8204",
     "position": "WR",
@@ -8533,7 +8468,7 @@
     ],
     "first_name": "Tyler",
     "full_name": "Tyler Goodson",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Goodson",
     "player_id": "8207",
     "position": "RB",
@@ -8585,12 +8520,25 @@
     ],
     "first_name": "Jelani",
     "full_name": "Jelani Woods",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Woods",
     "player_id": "8219",
     "position": "TE",
     "status": "Active",
     "team": "NYJ"
+  },
+  "8220": {
+    "fantasy_positions": [
+      "RB"
+    ],
+    "first_name": "Sincere",
+    "full_name": "Sincere McCormick",
+    "injury_status": null,
+    "last_name": "McCormick",
+    "player_id": "8220",
+    "position": "RB",
+    "status": "Active",
+    "team": "MIN"
   },
   "8223": {
     "fantasy_positions": [
@@ -8696,13 +8644,26 @@
     "status": "Active",
     "team": "TEN"
   },
+  "8255": {
+    "fantasy_positions": [
+      "RB"
+    ],
+    "first_name": "Raheem",
+    "full_name": "Raheem Blackshear",
+    "injury_status": null,
+    "last_name": "Blackshear",
+    "player_id": "8255",
+    "position": "RB",
+    "status": "Active",
+    "team": "NYJ"
+  },
   "827": {
     "fantasy_positions": [
       "QB"
     ],
     "first_name": "Tyrod",
     "full_name": "Tyrod Taylor",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Taylor",
     "player_id": "827",
     "position": "QB",
@@ -8728,7 +8689,7 @@
     ],
     "first_name": "Jordan",
     "full_name": "Jordan Mason",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Mason",
     "player_id": "8408",
     "position": "RB",
@@ -8819,7 +8780,7 @@
     ],
     "first_name": "Rashid",
     "full_name": "Rashid Shaheed",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Shaheed",
     "player_id": "8676",
     "position": "WR",
@@ -8890,32 +8851,6 @@
     "position": "WR",
     "status": "Active",
     "team": "CIN"
-  },
-  "8799": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Zaire",
-    "full_name": "Zaire Mitchell-Paden",
-    "injury_status": "Out",
-    "last_name": "Mitchell-Paden",
-    "player_id": "8799",
-    "position": "TE",
-    "status": "Active",
-    "team": "NO"
-  },
-  "8800": {
-    "fantasy_positions": [
-      "RB"
-    ],
-    "first_name": "Malik",
-    "full_name": "Malik Davis",
-    "injury_status": null,
-    "last_name": "Davis",
-    "player_id": "8800",
-    "position": "RB",
-    "status": "Active",
-    "team": "DAL"
   },
   "8801": {
     "fantasy_positions": [
@@ -9053,7 +8988,7 @@
     ],
     "first_name": "De'Von",
     "full_name": "De'Von Achane",
-    "injury_status": null,
+    "injury_status": "Questionable",
     "last_name": "Achane",
     "player_id": "9226",
     "position": "RB",
@@ -9098,19 +9033,6 @@
     "position": "QB",
     "status": "Active",
     "team": "PHI"
-  },
-  "9479": {
-    "fantasy_positions": [
-      "TE"
-    ],
-    "first_name": "Darnell",
-    "full_name": "Darnell Washington",
-    "injury_status": "Out",
-    "last_name": "Washington",
-    "player_id": "9479",
-    "position": "TE",
-    "status": "Active",
-    "team": "PIT"
   },
   "9480": {
     "fantasy_positions": [
@@ -9157,7 +9079,7 @@
     ],
     "first_name": "Dontayvion",
     "full_name": "Dontayvion Wicks",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Wicks",
     "player_id": "9486",
     "position": "WR",
@@ -9248,7 +9170,7 @@
     ],
     "first_name": "Jalin",
     "full_name": "Jalin Hyatt",
-    "injury_status": "Out",
+    "injury_status": "Questionable",
     "last_name": "Hyatt",
     "player_id": "9497",
     "position": "WR",
@@ -9300,7 +9222,7 @@
     ],
     "first_name": "Kayshon",
     "full_name": "Kayshon Boutte",
-    "injury_status": "Out",
+    "injury_status": null,
     "last_name": "Boutte",
     "player_id": "9504",
     "position": "WR",
