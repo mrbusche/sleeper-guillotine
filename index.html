@@ -27,39 +27,39 @@
       }
     </style>
   </head>
-  <body class="bg-gray-100 min-h-screen text-gray-800 p-4 md:p-8">
-    <div class="max-w-7xl mx-auto">
+  <body class="min-h-screen bg-gray-100 p-4 text-gray-800 md:p-8">
+    <div class="mx-auto max-w-7xl">
       <header class="mb-6">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Sleeper Guillotine League Viewer</h1>
+        <h1 class="text-3xl font-bold text-gray-900 md:text-4xl">Sleeper Guillotine League Viewer</h1>
         <p class="text-lg text-gray-600">Enter your league ID and a week to see all rosters and points.</p>
       </header>
 
-      <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div class="md:col-span-2">
-            <label for="leagueId" class="block text-sm font-medium text-gray-700 mb-1">League ID</label>
+            <label for="leagueId" class="mb-1 block text-sm font-medium text-gray-700">League ID</label>
             <input
               type="text"
               id="leagueId"
               value="1256757130514415616"
-              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label for="week" class="block text-sm font-medium text-gray-700 mb-1">Week</label>
+            <label for="week" class="mb-1 block text-sm font-medium text-gray-700">Week</label>
             <input
               type="number"
               id="week"
               value="1"
               min="1"
               max="18"
-              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <div class="flex items-end">
             <button
               id="fetchButton"
-              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full rounded-md bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm transition duration-150 ease-in-out hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               Fetch League Data
             </button>
@@ -67,8 +67,8 @@
         </div>
       </div>
 
-      <div id="messageArea" class="text-center my-6 hidden">
-        <div class="flex justify-center items-center">
+      <div id="messageArea" class="my-6 hidden text-center">
+        <div class="flex items-center justify-center">
           <div class="spinner mr-3"></div>
           <span id="messageText" class="text-lg font-medium text-gray-700">Loading...</span>
         </div>
@@ -79,11 +79,11 @@
         <p id="leagueDetails" class="text-md text-gray-600"></p>
       </div>
 
-      <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div id="results" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
 
       <div id="eliminatedSection" class="mt-12 hidden">
-        <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Eliminated Teams</h2>
-        <div id="eliminatedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <h2 class="mb-4 border-b pb-2 text-2xl font-bold text-gray-700">Eliminated Teams</h2>
+        <div id="eliminatedList" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
       </div>
     </div>
 
@@ -266,7 +266,12 @@
             scheduleMap[homeAbbr] = { status, game_id: event.id, opponent: awayAbbr, isHome: true };
           }
           if (awayAbbr) {
-            scheduleMap[awayAbbr] = { status, game_id: event.id, opponent: homeAbbr, isHome: false };
+            scheduleMap[awayAbbr] = {
+              status,
+              game_id: event.id,
+              opponent: homeAbbr,
+              isHome: false,
+            };
           }
         }
         return scheduleMap;
@@ -305,7 +310,11 @@
               const { full_name, first_name, last_name, position, injury_status, team: playerTeam } = playerDetails;
               const playerName = full_name || `${first_name} ${last_name}`;
               const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null;
-              const gameInfo = scheduleMap[espnTeam] || { status: 'none', opponent: null, isHome: false };
+              const gameInfo = scheduleMap[espnTeam] || {
+                status: 'none',
+                opponent: null,
+                isHome: false,
+              };
 
               // Determine Points
               const actualPoints = stats[playerId]?.[scoringKey] ?? 0;
@@ -523,10 +532,10 @@
       }
     </script>
 
-    <div class="text-center py-8">
+    <div class="py-8 text-center">
       <a
         href="https://github.com/mrbusche/sleeper-guillotine"
-        class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition"
+        class="inline-flex items-center text-sm text-gray-600 transition hover:text-gray-900"
         target="_blank"
       >
         Contribute on GitHub

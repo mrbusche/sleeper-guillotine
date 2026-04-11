@@ -1,20 +1,22 @@
 {
   "name": "sleeper-guillotine",
-  "private": true,
   "version": "0.0.1",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "prettier:fix": "prettier --write .",
+    "fmt": "oxfmt .",
+    "lint": "oxlint .",
     "preview": "vite preview"
-  },
-  "devDependencies": {
-    "prettier": "3.8.2",
-    "vite": "8.0.8"
   },
   "dependencies": {
     "@tailwindcss/vite": "4.2.2",
     "tailwindcss": "4.2.2"
+  },
+  "devDependencies": {
+    "oxfmt": "0.44.0",
+    "oxlint": "1.59.0",
+    "vite": "8.0.8"
   }
 }
