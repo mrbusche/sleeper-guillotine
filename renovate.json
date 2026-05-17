@@ -19,5 +19,6 @@
     }
   ],
   "assignees": ["@mrbusche"],
-  "ignoreUnstable": false
+  "ignoreUnstable": false,
+  "commitMessagePrefix": "chore(deps): "
 }
