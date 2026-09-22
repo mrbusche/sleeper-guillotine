@@ -6390,6 +6390,17 @@
     "status": "Active",
     "team": "NYG"
   },
+  "6149": {
+    "fantasy_positions": ["WR"],
+    "first_name": "Darius",
+    "full_name": "Darius Slayton",
+    "injury_status": null,
+    "last_name": "Slayton",
+    "player_id": "6149",
+    "position": "WR",
+    "status": "Active",
+    "team": "IND"
+  },
   "6154": {
     "fantasy_positions": ["WR"],
     "first_name": "David",
