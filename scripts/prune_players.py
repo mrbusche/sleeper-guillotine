@@ -1,8 +1,8 @@
 import json
 import sys
 from pathlib import Path
-from urllib.request import urlopen, Request
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 # Setup paths relative to this script
 # Equivalent to: join(__dirname, '..', 'public', '...')
@@ -47,9 +47,8 @@ def prune_object(obj):
 def should_keep_player(player):
     """Checks if player has an allowed position and is not Inactive or without a team."""
     position = player.get("position")
-    status = player.get("status")
     team = player.get("team")
-    return position in ALLOWED_POSITIONS and status != "Inactive" and team is not None
+    return position in ALLOWED_POSITIONS and team is not None
 
 
 def main():

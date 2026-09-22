@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/src/style.css" rel="stylesheet" />
+    <title>Sleeper Guillotine - Biweekly Starter Scores</title>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09f;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gray-100 p-4 text-gray-800 md:p-8">
+    <div class="mx-auto max-w-7xl">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 md:text-4xl">Biweekly Starter Scores</h1>
+        <p class="text-lg text-gray-600">
+          Enter your league ID to see each team's starting lineup, grouped into two-week blocks (Weeks 1-2, 3-4, etc.).
+        </p>
+      </header>
+
+      <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div class="md:col-span-3">
+            <label for="leagueId" class="mb-1 block text-sm font-medium text-gray-700">League ID</label>
+            <input
+              type="text"
+              id="leagueId"
+              value="1393684852577955840"
+              class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex items-end">
+            <button
+              id="fetchButton"
+              class="w-full rounded-md bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm transition duration-150 ease-in-out hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Load Scores
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="messageArea" class="my-6 hidden text-center">
+        <div class="flex items-center justify-center">
+          <div class="spinner mr-3"></div>
+          <span id="messageText" class="text-lg font-medium text-gray-700">Loading...</span>
+        </div>
+      </div>
+
+      <div id="leagueInfo" class="mb-6 hidden">
+        <h2 id="leagueName" class="text-2xl font-bold"></h2>
+        <p id="leagueDetails" class="text-md text-gray-600"></p>
+      </div>
+
+      <div id="periods"></div>
+
+      <div id="eliminatedSection" class="mt-12 hidden">
+        <h2 class="mb-4 border-b pb-2 text-2xl font-bold text-gray-700">Eliminated Teams</h2>
+        <div id="eliminatedList" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      const API_BASE = 'https://api.sleeper.app/v1';
+      const ESPN_REGULAR_SEASON_TYPE = 2;
+      let allPlayersData = null;
+
+      const TEAM_ABBR_SLEEPER_TO_ESPN = {
+        JAC: 'JAX',
+        WAS: 'WSH',
+      };
+
+      function convertTeamAbbr(sleeperAbbr) {
+        return TEAM_ABBR_SLEEPER_TO_ESPN[sleeperAbbr] || sleeperAbbr;
+      }
+
+      const numberFormatter = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+      const leagueIdInput = document.getElementById('leagueId');
+      const fetchButton = document.getElementById('fetchButton');
+      const messageArea = document.getElementById('messageArea');
+      const messageText = document.getElementById('messageText');
+      const leagueInfoDiv = document.getElementById('leagueInfo');
+      const leagueNameEl = document.getElementById('leagueName');
+      const leagueDetailsEl = document.getElementById('leagueDetails');
+      const periodsDiv = document.getElementById('periods');
+      const eliminatedSection = document.getElementById('eliminatedSection');
+      const eliminatedList = document.getElementById('eliminatedList');
+
+      function getCurrentNFLWeek() {
+        const today = new Date();
+        const seasonStart = new Date(today.getFullYear(), 8, 9);
+
+        if (today < seasonStart) {
+          return 1;
+        }
+
+        const diffDays = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
+        const currentWeek = Math.floor(diffDays / 7) + 1;
+        return Math.min(currentWeek, 18);
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const leagueIdParam = urlParams.get('leagueId');
+
+        if (leagueIdParam) {
+          leagueIdInput.value = leagueIdParam;
+          handleFetchData();
+        }
+      });
+      fetchButton.addEventListener('click', handleFetchData);
+
+      async function fetchData(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: response.statusText }));
+          throw new Error(errorData.message || `Failed to fetch ${url}`);
+        }
+        return response.json();
+      }
+
+      async function handleFetchData() {
+        const leagueId = leagueIdInput.value.trim();
+
+        if (!leagueId) {
+          showMessage('Please enter a League ID.', true);
+          return;
+        }
+
+        const url = new URL(window.location);
+        url.searchParams.set('leagueId', leagueId);
+        window.history.pushState({}, '', url);
+
+        setLoading(true, 'Fetching league data...');
+        clearResults();
+
+        try {
+          let playersPromise = allPlayersData ? Promise.resolve(allPlayersData) : fetchData('players_pruned.json');
+
+          const [league, rosters, users, resolvedPlayers] = await Promise.all([
+            fetchData(`${API_BASE}/league/${leagueId}`),
+            fetchData(`${API_BASE}/league/${leagueId}/rosters`),
+            fetchData(`${API_BASE}/league/${leagueId}/users`),
+            playersPromise,
+          ]);
+
+          if (!allPlayersData) allPlayersData = resolvedPlayers;
+
+          const playoffWeekStart = league?.settings?.playoff_week_start || 15;
+          const lastRegularWeek = Math.max(1, playoffWeekStart - 1);
+          const weeksToFetch = Math.min(getCurrentNFLWeek(), lastRegularWeek);
+
+          setLoading(true, `Fetching matchups & schedules for weeks 1-${weeksToFetch}...`);
+          const [weeklyMatchups, weeklySchedules] = await Promise.all([
+            Promise.all(Array.from({ length: weeksToFetch }, (_, i) => fetchData(`${API_BASE}/league/${leagueId}/matchups/${i + 1}`))),
+            Promise.all(
+              Array.from({ length: weeksToFetch }, (_, i) =>
+                fetchData(
+                  `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${i + 1}`,
+                ),
+              ),
+            ),
+          ]);
+          const weeklyScheduleMaps = weeklySchedules.map(processSchedule);
+
+          setLoading(true, 'Rendering...');
+          processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayersData, weeksToFetch);
+        } catch (error) {
+          console.error('Error fetching league data:', error);
+          showMessage(`Error: ${error.message}. Check League ID and console.`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function processSchedule(espnScheduleData) {
+        const scheduleMap = {};
+        if (!espnScheduleData?.events) return scheduleMap;
+
+        for (const event of espnScheduleData.events) {
+          const competition = event.competitions?.[0];
+          if (!competition) continue;
+
+          const homeTeam = competition.competitors.find((c) => c.homeAway === 'home');
+          const awayTeam = competition.competitors.find((c) => c.homeAway === 'away');
+
+          if (!homeTeam || !awayTeam) continue;
+
+          const homeAbbr = homeTeam.team?.abbreviation;
+          const awayAbbr = awayTeam.team?.abbreviation;
+
+          let status = 'pre_game';
+          const typeName = competition.status?.type?.name;
+          const state = competition.status?.type?.state;
+
+          if (typeName === 'STATUS_IN_PROGRESS' || state === 'in') {
+            status = 'inprogress';
+          } else if (typeName === 'STATUS_FINAL' || state === 'post') {
+            status = 'post_game';
+          }
+
+          if (homeAbbr) scheduleMap[homeAbbr] = { status };
+          if (awayAbbr) scheduleMap[awayAbbr] = { status };
+        }
+        return scheduleMap;
+      }
+
+      // A week is "final" once every starter's game (or bye) has finished; "in progress" if any
+      // game is live; otherwise "upcoming".
+      function computeWeekStatus(starters, scheduleMap, allPlayers) {
+        if (!starters || starters.length === 0) return 'upcoming';
+
+        const statuses = starters.map((id) => {
+          const playerTeam = allPlayers[id]?.team;
+          const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null;
+          return scheduleMap[espnTeam]?.status || 'none';
+        });
+
+        if (statuses.some((s) => s === 'inprogress')) return 'inprogress';
+        if (statuses.every((s) => s === 'post_game' || s === 'none')) return 'final';
+        return 'upcoming';
+      }
+
+      function processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayers, weeksToFetch) {
+        leagueNameEl.textContent = league.name;
+        leagueDetailsEl.textContent = `${league.season} Season | Weeks 1-${weeksToFetch} | ${league.total_rosters} Teams`;
+        leagueInfoDiv.classList.remove('hidden');
+
+        const userMap = Object.fromEntries(users.map((u) => [u.user_id, u.display_name]));
+
+        const activeTeams = [];
+        const eliminatedTeams = [];
+
+        rosters.forEach((roster) => {
+          const userDisplayName = roster.owner_id ? userMap[roster.owner_id] : 'Team Available';
+          const teamName = roster.metadata?.team_name || userDisplayName || `Team ${roster.roster_id}`;
+
+          if (!roster.players || roster.players.length === 0) {
+            eliminatedTeams.push({ teamName });
+          } else {
+            activeTeams.push({ rosterId: roster.roster_id, teamName });
+          }
+        });
+
+        // Map: week (0-indexed) -> rosterId -> matchup entry
+        const matchupsByWeekAndRoster = weeklyMatchups.map((weekMatchups) => {
+          const map = new Map();
+          (weekMatchups || []).forEach((m) => map.set(m.roster_id, m));
+          return map;
+        });
+
+        // Group weeks into 2-week periods: [1,2], [3,4], ...
+        const periods = [];
+        for (let w = 1; w <= weeksToFetch; w += 2) {
+          periods.push(w + 1 <= weeksToFetch ? [w, w + 1] : [w]);
+        }
+
+        renderPeriods(periods, activeTeams, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers);
+        renderEliminated(eliminatedTeams);
+      }
+
+      function renderPeriods(periods, activeTeams, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers) {
+        periodsDiv.innerHTML = periods
+          .map((weeksInPeriod, periodIdx) => {
+            const periodTeams = activeTeams
+              .map((team) => ({
+                team,
+                periodTotal: weeksInPeriod.reduce(
+                  (sum, week) => sum + (matchupsByWeekAndRoster[week - 1]?.get(team.rosterId)?.points ?? 0),
+                  0,
+                ),
+              }))
+              .sort((a, b) => a.periodTotal - b.periodTotal);
+
+            const teamCards = periodTeams
+              .map(({ team }) => createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers))
+              .join('');
+
+            return `
+              <div class="mb-12">
+                <h2 class="mb-4 border-b pb-2 text-2xl font-bold text-gray-700">${periodLabel(weeksInPeriod)}</h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">${teamCards}</div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      function weekStatusBadgeHTML(status) {
+        if (status === 'final') {
+          return '<span class="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Final</span>';
+        }
+        if (status === 'inprogress') {
+          return '<span class="ml-2 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-700">In Progress</span>';
+        }
+        return '<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">Upcoming</span>';
+      }
+
+      function periodCompleteCheckHTML(status) {
+        if (status !== 'final') return '';
+        return `
+          <span class="ml-2 inline-flex items-center text-green-600" title="Period Complete">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+              <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 7.22a.75.75 0 00-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 10-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l5.25-5.25z" clip-rule="evenodd" />
+            </svg>
+          </span>
+        `;
+      }
+
+      function createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers) {
+        const periodTotal = weeksInPeriod.reduce(
+          (sum, week) => sum + (matchupsByWeekAndRoster[week - 1]?.get(team.rosterId)?.points ?? 0),
+          0,
+        );
+
+        const weekStatuses = [];
+
+        const weekSections = weeksInPeriod
+          .map((week) => {
+            const matchup = matchupsByWeekAndRoster[week - 1]?.get(team.rosterId);
+            const starters = matchup?.starters ?? [];
+            const startersPoints = matchup?.starters_points ?? [];
+            const weekPoints = matchup?.points ?? 0;
+            const scheduleMap = weeklyScheduleMaps[week - 1] ?? {};
+            const weekStatus = computeWeekStatus(starters, scheduleMap, allPlayers);
+            weekStatuses.push(weekStatus);
+
+            const playerRows = starters
+              .map((playerId, idx) => {
+                const playerDetails = allPlayers[playerId];
+                const name = playerDetails ? playerDetails.full_name || `${playerDetails.first_name} ${playerDetails.last_name}` : playerId;
+                const position = playerDetails?.position || '';
+                const points = startersPoints[idx] ?? 0;
+                const playerTeam = playerDetails?.team;
+                const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null;
+                const gameStatus = scheduleMap[espnTeam]?.status;
+                const inProgressBadge = gameStatus === 'inprogress' ? ' 🚧' : '';
+                return `
+                  <li class="flex items-center justify-between py-1.5 text-gray-700">
+                    <span class="truncate" title="${name}">
+                      ${name} <span class="ml-1 text-xs text-gray-400 uppercase">${position}</span>${inProgressBadge}
+                    </span>
+                    <span class="flex-shrink-0 text-right font-medium">${numberFormatter.format(points)}</span>
+                  </li>
+                `;
+              })
+              .join('');
+
+            return `
+              <div class="mb-3">
+                <div class="mb-1 flex items-center justify-between">
+                  <span class="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    Week ${week}${weekStatusBadgeHTML(weekStatus)}
+                  </span>
+                  <span class="text-sm font-bold text-blue-600">${numberFormatter.format(weekPoints)}</span>
+                </div>
+                <ul class="divide-y divide-gray-100">
+                  ${playerRows || '<li class="py-1.5 text-gray-400">No starters found.</li>'}
+                </ul>
+              </div>
+            `;
+          })
+          .join('');
+
+        const periodStatus = weekStatuses.some((s) => s === 'inprogress')
+          ? 'inprogress'
+          : weeksInPeriod.length === 2 && weekStatuses.every((s) => s === 'final')
+            ? 'final'
+            : 'upcoming';
+
+        return `
+          <div class="overflow-hidden rounded-lg bg-white p-4 shadow-lg">
+            <div class="mb-3 border-b border-gray-200 pb-3">
+              <h3 class="truncate text-xl font-bold" title="${team.teamName}">${team.teamName}</h3>
+              <div class="mt-1 flex items-center">
+                <p class="text-2xl font-bold text-blue-600">${numberFormatter.format(periodTotal)}</p>
+                ${periodCompleteCheckHTML(periodStatus)}
+              </div>
+              <p class="text-xs tracking-wide text-gray-500 uppercase">Period Total</p>
+            </div>
+            ${weekSections}
+          </div>
+        `;
+      }
+
+      function renderEliminated(eliminatedTeams) {
+        if (eliminatedTeams.length === 0) return;
+
+        eliminatedSection.classList.remove('hidden');
+        eliminatedList.innerHTML = eliminatedTeams
+          .toSorted((a, b) => a.teamName.localeCompare(b.teamName))
+          .map(
+            (team) => `
+              <div class="rounded-lg bg-white p-4 shadow-lg">
+                <h3 class="truncate text-xl font-bold text-gray-500" title="${team.teamName}">${team.teamName}</h3>
+              </div>
+            `,
+          )
+          .join('');
+      }
+
+      function periodLabel(weeksInPeriod) {
+        return weeksInPeriod.length === 2 ? `Weeks ${weeksInPeriod[0]}-${weeksInPeriod[1]}` : `Week ${weeksInPeriod[0]}`;
+      }
+
+      function setLoading(isLoading, message = 'Loading...') {
+        if (isLoading) {
+          messageArea.classList.remove('hidden');
+          messageText.textContent = message;
+          fetchButton.disabled = true;
+        } else {
+          messageArea.classList.add('hidden');
+          fetchButton.disabled = false;
+        }
+      }
+
+      function showMessage(message, isError = false) {
+        messageText.textContent = message;
+        messageText.className = isError ? 'text-lg font-medium text-red-600' : 'text-lg font-medium text-gray-700';
+        messageArea.classList.remove('hidden');
+        messageArea.querySelector('.spinner')?.classList.add('hidden');
+      }
+
+      function clearResults() {
+        periodsDiv.replaceChildren();
+        eliminatedList.replaceChildren();
+        eliminatedSection.classList.add('hidden');
+        leagueInfoDiv.classList.add('hidden');
+        leagueNameEl.textContent = '';
+        leagueDetailsEl.textContent = '';
+        messageArea.querySelector('.spinner')?.classList.remove('hidden');
+      }
+    </script>
+
+    <div class="py-8 text-center">
+      <a
+        href="https://github.com/mrbusche/sleeper-guillotine"
+        class="inline-flex items-center text-sm text-gray-600 transition hover:text-gray-900"
+        target="_blank"
+      >
+        Contribute on GitHub
+        <svg class="ml-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+          />
+        </svg>
+      </a>
+    </div>
+  </body>
+</html>
