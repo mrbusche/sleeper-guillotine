@@ -32,7 +32,7 @@
       <header class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900 md:text-4xl">Biweekly Starter Scores</h1>
         <p class="text-lg text-gray-600">
-          Enter your league ID to see each team's starting lineup, grouped into two-week blocks (Weeks 1-2, 3-4, etc.).
+          Enter your league ID to see each team's starting lineup for the current two-week scoring period.
         </p>
       </header>
 
@@ -170,15 +170,18 @@
 
           const playoffWeekStart = league?.settings?.playoff_week_start || 15;
           const lastRegularWeek = Math.max(1, playoffWeekStart - 1);
-          const weeksToFetch = Math.min(getCurrentNFLWeek(), lastRegularWeek);
+          const currentWeek = Math.min(getCurrentNFLWeek(), lastRegularWeek);
+          // Only load/show the current two-week block (Weeks 1-2, 3-4, etc.), not prior periods.
+          const periodStartWeek = currentWeek % 2 === 0 ? currentWeek - 1 : currentWeek;
+          const weeksInPeriod = Array.from({ length: currentWeek - periodStartWeek + 1 }, (_, i) => periodStartWeek + i);
 
-          setLoading(true, `Fetching matchups & schedules for weeks 1-${weeksToFetch}...`);
+          setLoading(true, `Fetching matchups & schedules for ${periodLabel(weeksInPeriod)}...`);
           const [weeklyMatchups, weeklySchedules] = await Promise.all([
-            Promise.all(Array.from({ length: weeksToFetch }, (_, i) => fetchData(`${API_BASE}/league/${leagueId}/matchups/${i + 1}`))),
+            Promise.all(weeksInPeriod.map((week) => fetchData(`${API_BASE}/league/${leagueId}/matchups/${week}`))),
             Promise.all(
-              Array.from({ length: weeksToFetch }, (_, i) =>
+              weeksInPeriod.map((week) =>
                 fetchData(
-                  `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${i + 1}`,
+                  `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=${ESPN_REGULAR_SEASON_TYPE}&week=${week}`,
                 ),
               ),
             ),
@@ -186,7 +189,7 @@
           const weeklyScheduleMaps = weeklySchedules.map(processSchedule);
 
           setLoading(true, 'Rendering...');
-          processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayersData, weeksToFetch);
+          processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayersData, weeksInPeriod);
         } catch (error) {
           console.error('Error fetching league data:', error);
           showMessage(`Error: ${error.message}. Check League ID and console.`, true);
@@ -243,9 +246,9 @@
         return 'upcoming';
       }
 
-      function processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayers, weeksToFetch) {
+      function processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayers, weeksInPeriod) {
         leagueNameEl.textContent = league.name;
-        leagueDetailsEl.textContent = `${league.season} Season | Weeks 1-${weeksToFetch} | ${league.total_rosters} Teams`;
+        leagueDetailsEl.textContent = `${league.season} Season | ${periodLabel(weeksInPeriod)} | ${league.total_rosters} Teams`;
         leagueInfoDiv.classList.remove('hidden');
 
         const userMap = Object.fromEntries(users.map((u) => [u.user_id, u.display_name]));
@@ -264,48 +267,40 @@
           }
         });
 
-        // Map: week (0-indexed) -> rosterId -> matchup entry
-        const matchupsByWeekAndRoster = weeklyMatchups.map((weekMatchups) => {
-          const map = new Map();
-          (weekMatchups || []).forEach((m) => map.set(m.roster_id, m));
-          return map;
-        });
+        // Map: week number -> rosterId -> matchup entry
+        const matchupsByWeekAndRoster = new Map(
+          weeksInPeriod.map((week, idx) => {
+            const map = new Map();
+            (weeklyMatchups[idx] || []).forEach((m) => map.set(m.roster_id, m));
+            return [week, map];
+          }),
+        );
 
-        // Group weeks into 2-week periods: [1,2], [3,4], ...
-        const periods = [];
-        for (let w = 1; w <= weeksToFetch; w += 2) {
-          periods.push(w + 1 <= weeksToFetch ? [w, w + 1] : [w]);
-        }
+        // Map: week number -> ESPN schedule map for that week
+        const scheduleMapsByWeek = new Map(weeksInPeriod.map((week, idx) => [week, weeklyScheduleMaps[idx] ?? {}]));
 
-        renderPeriods(periods, activeTeams, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers);
+        renderPeriods(weeksInPeriod, activeTeams, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers);
         renderEliminated(eliminatedTeams);
       }
 
-      function renderPeriods(periods, activeTeams, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers) {
-        periodsDiv.innerHTML = periods
-          .map((weeksInPeriod, periodIdx) => {
-            const periodTeams = activeTeams
-              .map((team) => ({
-                team,
-                periodTotal: weeksInPeriod.reduce(
-                  (sum, week) => sum + (matchupsByWeekAndRoster[week - 1]?.get(team.rosterId)?.points ?? 0),
-                  0,
-                ),
-              }))
-              .sort((a, b) => a.periodTotal - b.periodTotal);
+      function renderPeriods(weeksInPeriod, activeTeams, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers) {
+        const periodTeams = activeTeams
+          .map((team) => ({
+            team,
+            periodTotal: weeksInPeriod.reduce((sum, week) => sum + (matchupsByWeekAndRoster.get(week)?.get(team.rosterId)?.points ?? 0), 0),
+          }))
+          .sort((a, b) => a.periodTotal - b.periodTotal);
 
-            const teamCards = periodTeams
-              .map(({ team }) => createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers))
-              .join('');
-
-            return `
-              <div class="mb-12">
-                <h2 class="mb-4 border-b pb-2 text-2xl font-bold text-gray-700">${periodLabel(weeksInPeriod)}</h2>
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">${teamCards}</div>
-              </div>
-            `;
-          })
+        const teamCards = periodTeams
+          .map(({ team }) => createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers))
           .join('');
+
+        periodsDiv.innerHTML = `
+          <div class="mb-12">
+            <h2 class="mb-4 border-b pb-2 text-2xl font-bold text-gray-700">${periodLabel(weeksInPeriod)}</h2>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">${teamCards}</div>
+          </div>
+        `;
       }
 
       function weekStatusBadgeHTML(status) {
@@ -329,9 +324,9 @@
         `;
       }
 
-      function createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, weeklyScheduleMaps, allPlayers) {
+      function createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers) {
         const periodTotal = weeksInPeriod.reduce(
-          (sum, week) => sum + (matchupsByWeekAndRoster[week - 1]?.get(team.rosterId)?.points ?? 0),
+          (sum, week) => sum + (matchupsByWeekAndRoster.get(week)?.get(team.rosterId)?.points ?? 0),
           0,
         );
 
@@ -339,11 +334,11 @@
 
         const weekSections = weeksInPeriod
           .map((week) => {
-            const matchup = matchupsByWeekAndRoster[week - 1]?.get(team.rosterId);
+            const matchup = matchupsByWeekAndRoster.get(week)?.get(team.rosterId);
             const starters = matchup?.starters ?? [];
             const startersPoints = matchup?.starters_points ?? [];
             const weekPoints = matchup?.points ?? 0;
-            const scheduleMap = weeklyScheduleMaps[week - 1] ?? {};
+            const scheduleMap = scheduleMapsByWeek.get(week) ?? {};
             const weekStatus = computeWeekStatus(starters, scheduleMap, allPlayers);
             weekStatuses.push(weekStatus);
 
