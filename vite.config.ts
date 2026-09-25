@@ -8,8 +8,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        biweekly: resolve(__dirname, 'biweekly.html'),
+        main: resolve(import.meta.dirname, 'index.html'),
+        biweekly: resolve(import.meta.dirname, 'biweekly.html'),
       },
     },
   },
