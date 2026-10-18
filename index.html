@@ -94,6 +94,9 @@
       let abortController = null; // Controller to cancel pending fetch requests
       const API_BASE = 'https://api.sleeper.app/v1';
       const ESPN_REGULAR_SEASON_TYPE = 2;
+      const NFL_REGULATION_QUARTERS = 4;
+      const NFL_QUARTER_SECONDS = 15 * 60;
+      const NFL_REGULATION_SECONDS = NFL_REGULATION_QUARTERS * NFL_QUARTER_SECONDS;
 
       const TEAM_ABBR_SLEEPER_TO_ESPN = {
         JAC: 'JAX',
@@ -259,6 +262,8 @@
           let status = 'pre_game';
           const typeName = competition.status?.type?.name;
           const state = competition.status?.type?.state;
+          const period = competition.status?.period;
+          const clock = competition.status?.displayClock;
 
           if (typeName === 'STATUS_IN_PROGRESS' || state === 'in') {
             status = 'inprogress';
@@ -267,7 +272,7 @@
           }
 
           if (homeAbbr) {
-            scheduleMap[homeAbbr] = { status, game_id: event.id, opponent: awayAbbr, isHome: true };
+            scheduleMap[homeAbbr] = { status, game_id: event.id, opponent: awayAbbr, isHome: true, period, clock };
           }
           if (awayAbbr) {
             scheduleMap[awayAbbr] = {
@@ -275,10 +280,27 @@
               game_id: event.id,
               opponent: homeAbbr,
               isHome: false,
+              period,
+              clock,
             };
           }
         }
         return scheduleMap;
+      }
+
+      function getRemainingGameFraction(period, clock) {
+        const periodNumber = Number(period);
+        const clockMatch = typeof clock === 'string' ? clock.match(/^(\d+):([0-5]\d)$/) : null;
+
+        if (!Number.isInteger(periodNumber) || periodNumber < 1 || periodNumber > NFL_REGULATION_QUARTERS || !clockMatch) {
+          return 0;
+        }
+
+        const clockSeconds = Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+        if (clockSeconds > NFL_QUARTER_SECONDS) return 0;
+
+        const remainingSeconds = (NFL_REGULATION_QUARTERS - periodNumber) * NFL_QUARTER_SECONDS + clockSeconds;
+        return remainingSeconds / NFL_REGULATION_SECONDS;
       }
 
       function processAndRender(league, rosters, users, stats, projections, scheduleMap, allPlayers, week) {
@@ -324,13 +346,16 @@
               const actualPoints = stats[playerId]?.[scoringKey] ?? 0;
               const projectedPoints = projections[playerId]?.[scoringKey] ?? 0;
 
-              // Logic: Use Project if game hasn't started (or isn't scheduled), otherwise Actual
+              // Use the remaining share of a player's full-game projection while their game is in progress.
               let displayPoints = 0;
               let isProjected = false;
 
               if (gameInfo.status === 'none' || gameInfo.status === 'pre_game') {
                 displayPoints = projectedPoints;
                 isProjected = true;
+              } else if (gameInfo.status === 'inprogress') {
+                const remainingFraction = getRemainingGameFraction(gameInfo.period, gameInfo.clock);
+                displayPoints = actualPoints + projectedPoints * remainingFraction;
               } else {
                 displayPoints = actualPoints;
               }
