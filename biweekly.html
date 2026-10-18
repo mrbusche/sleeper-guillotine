@@ -81,6 +81,9 @@
     <script type="module">
       const API_BASE = 'https://api.sleeper.app/v1';
       const ESPN_REGULAR_SEASON_TYPE = 2;
+      const NFL_REGULATION_QUARTERS = 4;
+      const NFL_QUARTER_SECONDS = 15 * 60;
+      const NFL_REGULATION_SECONDS = NFL_REGULATION_QUARTERS * NFL_QUARTER_SECONDS;
       let allPlayersData = null;
 
       const TEAM_ABBR_SLEEPER_TO_ESPN = {
@@ -175,8 +178,8 @@
           const periodStartWeek = currentWeek % 2 === 0 ? currentWeek - 1 : currentWeek;
           const weeksInPeriod = Array.from({ length: currentWeek - periodStartWeek + 1 }, (_, i) => periodStartWeek + i);
 
-          setLoading(true, `Fetching matchups & schedules for ${periodLabel(weeksInPeriod)}...`);
-          const [weeklyMatchups, weeklySchedules] = await Promise.all([
+          setLoading(true, `Fetching matchups, schedules & projections for ${periodLabel(weeksInPeriod)}...`);
+          const [weeklyMatchups, weeklySchedules, currentWeekProjections] = await Promise.all([
             Promise.all(weeksInPeriod.map((week) => fetchData(`${API_BASE}/league/${leagueId}/matchups/${week}`))),
             Promise.all(
               weeksInPeriod.map((week) =>
@@ -185,11 +188,22 @@
                 ),
               ),
             ),
+            fetchData(`${API_BASE}/projections/nfl/regular/${league.season}/${currentWeek}`),
           ]);
           const weeklyScheduleMaps = weeklySchedules.map(processSchedule);
 
           setLoading(true, 'Rendering...');
-          processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayersData, weeksInPeriod);
+          processAndRender(
+            league,
+            rosters,
+            users,
+            weeklyMatchups,
+            weeklyScheduleMaps,
+            currentWeekProjections,
+            allPlayersData,
+            weeksInPeriod,
+            currentWeek,
+          );
         } catch (error) {
           console.error('Error fetching league data:', error);
           showMessage(`Error: ${error.message}. Check League ID and console.`, true);
@@ -217,6 +231,8 @@
           let status = 'pre_game';
           const typeName = competition.status?.type?.name;
           const state = competition.status?.type?.state;
+          const period = competition.status?.period;
+          const clock = competition.status?.displayClock;
 
           if (typeName === 'STATUS_IN_PROGRESS' || state === 'in') {
             status = 'inprogress';
@@ -224,10 +240,32 @@
             status = 'post_game';
           }
 
-          if (homeAbbr) scheduleMap[homeAbbr] = { status };
-          if (awayAbbr) scheduleMap[awayAbbr] = { status };
+          if (homeAbbr) scheduleMap[homeAbbr] = { status, period, clock };
+          if (awayAbbr) scheduleMap[awayAbbr] = { status, period, clock };
         }
         return scheduleMap;
+      }
+
+      function getRemainingGameFraction(period, clock) {
+        const periodNumber = Number(period);
+        const clockMatch = typeof clock === 'string' ? clock.match(/^(\d+):([0-5]\d)$/) : null;
+
+        if (!Number.isInteger(periodNumber) || periodNumber < 1 || periodNumber > NFL_REGULATION_QUARTERS || !clockMatch) {
+          return 0;
+        }
+
+        const clockSeconds = Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+        if (clockSeconds > NFL_QUARTER_SECONDS) return 0;
+
+        const remainingSeconds = (NFL_REGULATION_QUARTERS - periodNumber) * NFL_QUARTER_SECONDS + clockSeconds;
+        return remainingSeconds / NFL_REGULATION_SECONDS;
+      }
+
+      function getScoringKey(settings) {
+        const rec = settings?.rec ?? 0;
+        if (rec === 1) return 'pts_ppr';
+        if (rec === 0.5) return 'pts_half_ppr';
+        return 'pts_std';
       }
 
       // A week is "final" once every starter's game (or bye) has finished; "in progress" if any
@@ -246,7 +284,17 @@
         return 'upcoming';
       }
 
-      function processAndRender(league, rosters, users, weeklyMatchups, weeklyScheduleMaps, allPlayers, weeksInPeriod) {
+      function processAndRender(
+        league,
+        rosters,
+        users,
+        weeklyMatchups,
+        weeklyScheduleMaps,
+        currentWeekProjections,
+        allPlayers,
+        weeksInPeriod,
+        currentWeek,
+      ) {
         leagueNameEl.textContent = league.name;
         leagueDetailsEl.textContent = `${league.season} Season | ${periodLabel(weeksInPeriod)} | ${league.total_rosters} Teams`;
         leagueInfoDiv.classList.remove('hidden');
@@ -279,20 +327,50 @@
         // Map: week number -> ESPN schedule map for that week
         const scheduleMapsByWeek = new Map(weeksInPeriod.map((week, idx) => [week, weeklyScheduleMaps[idx] ?? {}]));
 
-        renderPeriods(weeksInPeriod, activeTeams, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers);
+        renderPeriods(
+          weeksInPeriod,
+          activeTeams,
+          matchupsByWeekAndRoster,
+          scheduleMapsByWeek,
+          currentWeekProjections,
+          allPlayers,
+          currentWeek,
+          getScoringKey(league.scoring_settings),
+        );
         renderEliminated(eliminatedTeams);
       }
 
-      function renderPeriods(weeksInPeriod, activeTeams, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers) {
+      function renderPeriods(
+        weeksInPeriod,
+        activeTeams,
+        matchupsByWeekAndRoster,
+        scheduleMapsByWeek,
+        currentWeekProjections,
+        allPlayers,
+        currentWeek,
+        scoringKey,
+      ) {
         const periodTeams = activeTeams
           .map((team) => ({
             team,
             periodTotal: weeksInPeriod.reduce((sum, week) => sum + (matchupsByWeekAndRoster.get(week)?.get(team.rosterId)?.points ?? 0), 0),
+            projectedPeriodTotal: getProjectedPeriodTotal(
+              team,
+              weeksInPeriod,
+              matchupsByWeekAndRoster,
+              scheduleMapsByWeek,
+              currentWeekProjections,
+              allPlayers,
+              currentWeek,
+              scoringKey,
+            ),
           }))
           .sort((a, b) => a.periodTotal - b.periodTotal);
 
         const teamCards = periodTeams
-          .map(({ team }) => createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers))
+          .map(({ team, projectedPeriodTotal }) =>
+            createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers, projectedPeriodTotal),
+          )
           .join('');
 
         periodsDiv.innerHTML = `
@@ -301,6 +379,43 @@
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">${teamCards}</div>
           </div>
         `;
+      }
+
+      function getProjectedPeriodTotal(
+        team,
+        weeksInPeriod,
+        matchupsByWeekAndRoster,
+        scheduleMapsByWeek,
+        currentWeekProjections,
+        allPlayers,
+        currentWeek,
+        scoringKey,
+      ) {
+        return weeksInPeriod.reduce((periodTotal, week) => {
+          const matchup = matchupsByWeekAndRoster.get(week)?.get(team.rosterId);
+          if (week !== currentWeek || !matchup?.starters?.length) {
+            return periodTotal + (matchup?.points ?? 0);
+          }
+
+          const scheduleMap = scheduleMapsByWeek.get(week) ?? {};
+          const projectedWeekTotal = matchup.starters.reduce((weekTotal, playerId, idx) => {
+            const actualPoints = matchup.starters_points?.[idx] ?? 0;
+            const projectedPoints = currentWeekProjections?.[playerId]?.[scoringKey] ?? 0;
+            const playerTeam = allPlayers[playerId]?.team;
+            const espnTeam = playerTeam ? convertTeamAbbr(playerTeam) : null;
+            const gameInfo = scheduleMap[espnTeam];
+
+            if (gameInfo?.status === 'inprogress') {
+              return weekTotal + actualPoints + projectedPoints * getRemainingGameFraction(gameInfo.period, gameInfo.clock);
+            }
+            if (!gameInfo || gameInfo.status === 'pre_game') {
+              return weekTotal + projectedPoints;
+            }
+            return weekTotal + actualPoints;
+          }, 0);
+
+          return periodTotal + projectedWeekTotal;
+        }, 0);
       }
 
       function weekStatusBadgeHTML(status) {
@@ -324,7 +439,14 @@
         `;
       }
 
-      function createTeamPeriodCardHTML(team, weeksInPeriod, matchupsByWeekAndRoster, scheduleMapsByWeek, allPlayers) {
+      function createTeamPeriodCardHTML(
+        team,
+        weeksInPeriod,
+        matchupsByWeekAndRoster,
+        scheduleMapsByWeek,
+        allPlayers,
+        projectedPeriodTotal,
+      ) {
         const periodTotal = weeksInPeriod.reduce(
           (sum, week) => sum + (matchupsByWeekAndRoster.get(week)?.get(team.rosterId)?.points ?? 0),
           0,
@@ -389,11 +511,19 @@
           <div class="overflow-hidden rounded-lg bg-white p-4 shadow-lg">
             <div class="mb-3 border-b border-gray-200 pb-3">
               <h3 class="truncate text-xl font-bold" title="${team.teamName}">${team.teamName}</h3>
-              <div class="mt-1 flex items-center">
-                <p class="text-2xl font-bold text-blue-600">${numberFormatter.format(periodTotal)}</p>
+              <div class="mt-1 flex items-center justify-between">
+                <div class="flex space-x-6">
+                  <div>
+                    <p class="text-2xl font-bold text-blue-600">${numberFormatter.format(periodTotal)}</p>
+                    <p class="text-xs tracking-wide text-gray-500 uppercase">Period Total</p>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-bold text-gray-800">${numberFormatter.format(projectedPeriodTotal)}</p>
+                    <p class="text-xs tracking-wide text-gray-500 uppercase">Projected</p>
+                  </div>
+                </div>
                 ${periodCompleteCheckHTML(periodStatus)}
               </div>
-              <p class="text-xs tracking-wide text-gray-500 uppercase">Period Total</p>
             </div>
             ${weekSections}
           </div>
