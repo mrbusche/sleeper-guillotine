@@ -28,6 +28,21 @@
     </style>
   </head>
   <body class="min-h-screen bg-gray-100 p-4 text-gray-800 md:p-8">
+    <div
+      id="updateNotice"
+      class="mx-auto mb-4 flex hidden max-w-7xl items-center justify-between gap-4 rounded-lg border border-blue-300 bg-blue-50 p-4 text-blue-900"
+      role="status"
+      aria-live="polite"
+    >
+      <span>A new version is available. Refresh the page to get the latest updates.</span>
+      <button
+        id="refreshPageButton"
+        class="shrink-0 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+        type="button"
+      >
+        Refresh
+      </button>
+    </div>
     <div class="mx-auto max-w-7xl">
       <header class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900 md:text-4xl">Biweekly Starter Scores</h1>
@@ -79,6 +94,10 @@
     </div>
 
     <script type="module">
+      import { watchForUpdates } from './src/update-check.js';
+
+      watchForUpdates();
+
       const API_BASE = 'https://api.sleeper.app/v1';
       const ESPN_REGULAR_SEASON_TYPE = 2;
       const NFL_REGULATION_QUARTERS = 4;
@@ -365,7 +384,7 @@
               scoringKey,
             ),
           }))
-          .sort((a, b) => a.periodTotal - b.periodTotal);
+          .sort((a, b) => a.projectedPeriodTotal - b.projectedPeriodTotal);
 
         const teamCards = periodTeams
           .map(({ team, projectedPeriodTotal }) =>
